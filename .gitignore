@@ -1,0 +1,4 @@
+# ignora archivos o directorios en el git
+
+.env
+node_modules
