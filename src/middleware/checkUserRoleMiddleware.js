@@ -13,6 +13,7 @@ const checkUserRole = (requiredRole) => {
         if (requiredRole === 'ELA Super Usuario' && !req.user.approved) {
             return res.status(403).json({ status: "error", data: "No tienes permisos para acceder al bloc informativo" });
         }
+        
 
         next(); // Continúa con la siguiente función de middleware si el usuario tiene el rol requerido y la aprobación (si es necesario)
     };

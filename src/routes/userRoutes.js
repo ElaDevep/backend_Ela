@@ -2,14 +2,15 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer"); // Importa multer
 const checkUserRole = require("../middleware/checkUserRoleMiddleware"); // Ruta corregida
+const path = require("path");
 
 // Configuración de multer para la carga de imágenes
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, '../uploads'); // Directorio donde se almacenarán las imágenes
+        cb(null, path.join(__dirname, '../uploads')); // Ruta absoluta donde se almacenarán las imágenes
     },
     filename: function (req, file, cb) {
-        // Se establece el nombre del archivopara que sea único
+        // Se establece el nombre del archivo para que sea único
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
@@ -34,5 +35,8 @@ router.put('/profile/edit', checkUserRole('Visualizador'), (req, res) => {
     // Aquí puedes actualizar los detalles del usuario en la base de datos
     res.send({ message: 'Información del usuario actualizada' });
 });
+
+
+
 
 module.exports = router;

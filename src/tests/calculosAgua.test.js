@@ -13,7 +13,7 @@ function runTests() {
     const reduccion = calcularPorcentajeReduccion(100, 80);
     console.log('Resultado:', reduccion);
 
-    // Continuar con las demás pruebas...
+
 }
 
 runTests();

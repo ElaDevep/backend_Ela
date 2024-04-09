@@ -6,6 +6,8 @@ const User = require("../models/UserDetails");
 const { UserDetailSchema, roles } = require("../models/UserDetails");
 const checkUserRole = require("../middleware/checkUserRoleMiddleware");
 
+
+
 // Ruta para el inicio de sesión
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
@@ -153,7 +155,6 @@ router.post('/admin/register', checkUserRole('Admin'), async (req, res) => {
     }
 
 });
-
 // Ruta PUT para actualizar la información del usuario
 router.put('/update/:userId', async (req, res) => {
     const userId = req.params.userId;
@@ -199,7 +200,6 @@ router.put('/update/:userId', async (req, res) => {
     }
 });
 
-
 // Ruta GET para obtener la información de un usuario específico
 router.get('/user/:userId', async (req, res) => {
     const userId = req.params.userId;
@@ -221,4 +221,6 @@ router.get('/user/:userId', async (req, res) => {
     }
 });
 
+
 module.exports = router;
+
