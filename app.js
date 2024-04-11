@@ -7,6 +7,7 @@ const userRoutes = require("./src/routes/userRoutes");
 const uploadRoutes = require("./src/routes/uploadRoutes");
 const nodemailer = require('nodemailer');
 const jwt = require("jsonwebtoken");
+const bcrypt = require('bcrypt'); 
 
 
 
@@ -92,17 +93,17 @@ mongoose.connect(mongoUrl)
             res.status(400).send({ status: "error", data: message });
         }
       });
-      // Actualizar y resetear contraseña
+
       // Configuración del transporter de nodemailer
-     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-          user: 'developmentELA@gmail.com',
-          pass: 'ghey kptl qckc tkbi'
-      }
-  });
-  
-  // Ruta para el restablecimiento de contraseña
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+      user: 'developmentELA@gmail.com',
+      pass: 'ghey kptl qckc tkbi'
+  }
+});
+
+// Ruta para el restablecimiento de contraseña - Método POST
 app.post('/forgot-password', async (req, res) => {
   try {
       // Verificar si el correo electrónico proporcionado existe en la base de datos
@@ -140,6 +141,40 @@ app.post('/forgot-password', async (req, res) => {
       res.status(500).send('Error en el servidor');
   }
 });
+
+// restear contraseña
+// Ruta para procesar el restablecimiento de contraseña
+app.post('/reset-password', async (req, res) => {
+  try {
+      const { token, password, confirmPassword } = req.body;
+
+      // Verificar que las contraseñas sean iguales
+      if (password !== confirmPassword) {
+          return res.status(400).send('Las contraseñas no coinciden');
+      }
+
+      // Verificar y decodificar el token
+      const decoded = jwt.verify(token, 'tu_secreto');
+
+      // Actualizar la contraseña en la base de datos
+      const user = await UserDetails.findOne({ email: decoded.email });
+      if (!user) {
+          return res.status(404).send('Usuario no encontrado');
+      }
+
+      // Guardar la nueva contraseña en la base de datos
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+      await user.save();
+
+      res.status(200).send('Contraseña restablecida exitosamente');
+  } catch (error) {
+      console.error(error);
+      res.status(500).send('Error al restablecer la contraseña');
+  }
+});
+
+
 // Ruta para consultar todos los usuarios
 app.get("/usuarios", async (req, res) => {
   try {

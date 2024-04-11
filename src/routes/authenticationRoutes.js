@@ -7,7 +7,6 @@ const { UserDetailSchema, roles } = require("../models/UserDetails");
 const checkUserRole = require("../middleware/checkUserRoleMiddleware");
 
 
-
 // Ruta para el inicio de sesión
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
@@ -23,6 +22,7 @@ router.post('/login', async (req, res) => {
 
         // Verificar si la contraseña proporcionada coincide con la contraseña almacenada
         const passwordMatch = await bcrypt.compare(password, user.password);
+
 
         // Si las contraseñas no coinciden, responder con un mensaje de error
         if (!passwordMatch) {
@@ -81,8 +81,8 @@ router.post('/register', async (req, res) => {
             email,
             mobile,
             password: hashedPassword,
-            role: 'Visualizador', // Asignar el rol por defecto al registrarse
-            approved: false
+            role: 'Visualizador' // Asignar el rol por defecto al registrarse
+           
         });
 
         res.send({ status: "ok", data: "Usuario creado correctamente" });
@@ -92,7 +92,8 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// Ruta post para que el administrador asigne roles a los nuevos usuarios
+// Ruta post para que el administrador cree nuevos usuarios con roles especificos
+
 router.post('/admin/register', checkUserRole('Admin'), async (req, res) => {
     const { name, email, mobile, password, role } = req.body;
 
@@ -144,8 +145,8 @@ router.post('/admin/register', checkUserRole('Admin'), async (req, res) => {
             email,
             mobile,
             password: hashedPassword,
-            role,
-            approved: false
+            role
+        
         });
 
         res.send({ status: "ok", data: "Usuario creado correctamente con el rol asignado" });
@@ -155,6 +156,7 @@ router.post('/admin/register', checkUserRole('Admin'), async (req, res) => {
     }
 
 });
+
 // Ruta PUT para actualizar la información del usuario
 router.put('/update/:userId', async (req, res) => {
     const userId = req.params.userId;
