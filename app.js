@@ -8,6 +8,7 @@ const uploadRoutes = require("./src/routes/uploadRoutes");
 const nodemailer = require('nodemailer');
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt'); 
+const cors = require('cors');
 
 
 
@@ -15,8 +16,10 @@ const bcrypt = require('bcrypt');
 const UserDetails = require('./src/models/UserDetails');
 
 const app = express();
-
+app.use(cors()); // Configuración de CORS
 app.use(express.json());
+
+
 
 // Conexión a MongoDB
 const mongoUrl = "mongodb+srv://adminEla:jn8LOqeW4Z1mDNpD@cluster0.rpysdem.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
@@ -116,7 +119,7 @@ app.post('/forgot-password', async (req, res) => {
       const token = jwt.sign({ email: req.body.email }, 'tu_secreto', { expiresIn: '1h' });
 
       // Construir URL de restablecimiento de contraseña
-      const resetUrl = `http://localhost:4000/restablecer-contraseña?token=${token}`;
+      const resetUrl = `http://localhost:3000/restore_password?/${token}`;
 
       // Configurar el correo electrónico
       const mailOptions = {
@@ -142,22 +145,42 @@ app.post('/forgot-password', async (req, res) => {
   }
 });
 
-// restear contraseña
+// Ruta para validar el token y permitir el restablecimiento de contraseña - Método POST
+app.post('/validate-token', async (req, res) => {
+  try {
+      const { token } = req.body; // Obtener el token del cuerpo de la solicitud (req.body)
+
+      // Verificar y decodificar el token
+      const decoded = jwt.verify(token, 'tu_secreto');
+
+      // Buscar al usuario en la base de datos usando el correo electrónico decodificado
+      const user = await UserDetails.findOne({ email: decoded.email });
+      if (!user) {
+          return res.status(404).send('Usuario no encontrado');
+      }
+
+      // El token es válido, puedes permitir al usuario restablecer la contraseña
+      res.status(200).send({ valid: true, userId: user._id });
+  } catch (error) {
+      console.error(error);
+      res.status(500).send('Error al validar el token');
+  }
+});
+
+// resetear contraseña
 // Ruta para procesar el restablecimiento de contraseña
+
 app.post('/reset-password', async (req, res) => {
   try {
-      const { token, password, confirmPassword } = req.body;
+      const { userId, password, confirmPassword } = req.body;
 
       // Verificar que las contraseñas sean iguales
       if (password !== confirmPassword) {
           return res.status(400).send('Las contraseñas no coinciden');
       }
 
-      // Verificar y decodificar el token
-      const decoded = jwt.verify(token, 'tu_secreto');
-
-      // Actualizar la contraseña en la base de datos
-      const user = await UserDetails.findOne({ email: decoded.email });
+      // Buscar al usuario por ID
+      const user = await UserDetails.findById(userId);
       if (!user) {
           return res.status(404).send('Usuario no encontrado');
       }
@@ -173,7 +196,6 @@ app.post('/reset-password', async (req, res) => {
       res.status(500).send('Error al restablecer la contraseña');
   }
 });
-
 
 // Ruta para consultar todos los usuarios
 app.get("/usuarios", async (req, res) => {
