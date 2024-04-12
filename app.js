@@ -211,7 +211,6 @@ app.get("/usuarios", async (req, res) => {
   }
 });
 
-
 // Ruta GET para filtrar usuarios
 app.get("/filter_users", async (req, res) => {
   try {
@@ -219,42 +218,56 @@ app.get("/filter_users", async (req, res) => {
 
     const filter = {};
 
-    // Configurar filtros p
+    // Configurar filtros 
     if (name !== undefined) {
-      // Utilizar expresión regular nombres
+      // Utilizar expresión regular 
       const regexName = new RegExp(`^${name}`, 'i'); 
       filter.name = regexName;
     }
     
     if (email !== undefined) {
-      // Filtro (exacto o parcial)
+      // Filtro para email (exacto o parcial)
       if (email.includes('@')) {
-        filter.email = email; 
+        filter.email = email; // Coincidencia exacta 
       } else {
-        filter.email = { $regex: `^${email}`, $options: 'i' }; 
+        filter.email = { $regex: `^${email}`, $options: 'i' }; // Coincidencia parcial 
       }
     }
 
     if (mobile !== undefined) {
-      // Filtro para número de móvil exacto
-      filter.mobile = mobile;
+      // Filtro para número de móvil (exacto o parcial)
+      if (/^\d{10}$/.test(mobile)) {
+     
+        //exacta
+        filter.mobile = mobile;
+      } else {
+        // coincidencia parcial
+        filter.mobile = { $regex: `^${mobile}`, $options: 'i' };
+      }
     }
     
     if (role !== undefined) {
-      // Filtro para rol exacto
-      filter.role = role;
+      // Filtro para rol (exacto o parcial)
+      // Verificar si el valor proporcionado es un rol exacto (coincidencia exacta)
+      const regexRole = new RegExp(`^${role}$`, 'i');
+      filter.role = regexRole; // Coincidencia exacta del rol
+
+     filter.role = { $regex: `^${role}`, $options: 'i' }; 
     }
 
-    // Realizar la búsqueda en la base de datos con el filtro
+    // Realizar la búsqueda en la base de datos 
     const usuarios = await UserDetails.find(filter);
 
-    // Responder con la lista de usuarios que coinciden con el filtro
+    // Responder 
     res.status(200).json({ status: "ok", data: usuarios });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: "error", message: "Error al filtrar usuarios" });
   }
 });
+
+
+
 
     // Manejo de la ruta raíz
     app.get("/", (req, res) => {
