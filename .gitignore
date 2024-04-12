@@ -1,5 +1,5 @@
 # ignora archivos o directorios en el git
-
+node_modules
 .env
 error.log
-node_modules
+

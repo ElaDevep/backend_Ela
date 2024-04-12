@@ -211,6 +211,51 @@ app.get("/usuarios", async (req, res) => {
   }
 });
 
+
+// Ruta GET para filtrar usuarios
+app.get("/filter_users", async (req, res) => {
+  try {
+    const { name, email, mobile, role } = req.query;
+
+    const filter = {};
+
+    // Configurar filtros p
+    if (name !== undefined) {
+      // Utilizar expresión regular nombres
+      const regexName = new RegExp(`^${name}`, 'i'); 
+      filter.name = regexName;
+    }
+    
+    if (email !== undefined) {
+      // Filtro (exacto o parcial)
+      if (email.includes('@')) {
+        filter.email = email; 
+      } else {
+        filter.email = { $regex: `^${email}`, $options: 'i' }; 
+      }
+    }
+
+    if (mobile !== undefined) {
+      // Filtro para número de móvil exacto
+      filter.mobile = mobile;
+    }
+    
+    if (role !== undefined) {
+      // Filtro para rol exacto
+      filter.role = role;
+    }
+
+    // Realizar la búsqueda en la base de datos con el filtro
+    const usuarios = await UserDetails.find(filter);
+
+    // Responder con la lista de usuarios que coinciden con el filtro
+    res.status(200).json({ status: "ok", data: usuarios });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error", message: "Error al filtrar usuarios" });
+  }
+});
+
     // Manejo de la ruta raíz
     app.get("/", (req, res) => {
       res.send({ status: "Inicio" });
