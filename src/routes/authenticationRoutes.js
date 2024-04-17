@@ -35,6 +35,33 @@ router.post('/login', async (req, res) => {
 
         // Devolver el token como respuesta
         res.send({ status: "ok", data: token });
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ status: "error", data: "Error en el servidor" });
+    }
+});
+
+// Ruta para validar un token de sesión
+router.post('/validate-token', async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        // Verificar si se proporcionó un token
+        if (!token) {
+            return res.status(401).send({ status: "error", data: "Token no proporcionado" });
+        }
+
+        // Verificar el token utilizando la clave secreta ('secretKey') usada para firmarlo
+        jwt.verify(token, 'secretKey', (err, decoded) => {
+            if (err) {
+                return res.status(401).send({ status: "error", data: "Token inválido" });
+            } else {
+                // El token es válido, puedes responder con los datos decodificados
+                const userId = decoded.userId;
+                res.send({ status: "ok", data: { userId } });
+            }
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send({ status: "error", data: "Error en el servidor" });

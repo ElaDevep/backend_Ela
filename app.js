@@ -9,7 +9,7 @@ const nodemailer = require('nodemailer');
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt'); 
 const cors = require('cors');
-
+const calculosAgua = require("./src/controllers/calculosAgua");
 
 
 // Importar el modelo de usuario
@@ -35,7 +35,7 @@ mongoose.connect(mongoUrl)
       ],
     });
 
-    // Importar modulos de rutas
+    // Importar modulos de rutas  
     const blocInformativoRoutes = require("./src/routes/blocInformativoRoutes");
 
     // Montaje de las rutas
@@ -44,7 +44,7 @@ mongoose.connect(mongoUrl)
     app.use("/bloc-informativo", blocInformativoRoutes);
     app.use("/user", userRoutes);
     app.use("/upload", uploadRoutes); // Utiliza uploadRoutes en lugar de upload
-
+    app.use("/calculos-agua", calculosAgua);
 
     // Ruta de carga de archivos
     app.post("/upload", uploadRoutes, (req, res) => {
