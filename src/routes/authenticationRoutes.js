@@ -5,7 +5,12 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/UserDetails");
 const { UserDetailSchema, roles } = require("../models/UserDetails");
 const checkUserRole = require("../middleware/checkUserRoleMiddleware");
+const path = require('path');
+const fs = require('fs');
 
+
+// Definir los roles válidos
+const validRoles = ['Admin', 'Cliente', 'Visualizador', 'Carga Información', 'ELA Super Usuario'];
 
 // Ruta para el inicio de sesión
 router.post('/login', async (req, res) => {
@@ -20,7 +25,7 @@ router.post('/login', async (req, res) => {
             return res.status(401).send({ status: "error", data: "Correo electrónico o contraseña incorrectos" });
         }
 
-        // Verificar si la contraseña proporcionada coincide con la contraseña almacenada
+        // Verificar si la contraseña proporcionada coincide con la contraseña almacenada 
         const passwordMatch = await bcrypt.compare(password, user.password);
 
 
@@ -47,7 +52,7 @@ router.post('/validate-token', async (req, res) => {
     const { token } = req.body;
 
     try {
-        // Verificar si se proporcionó un token
+        // Verificar si se proporcionó un token 
         if (!token) {
             return res.status(401).send({ status: "error", data: "Token no proporcionado" });
         }
@@ -68,72 +73,20 @@ router.post('/validate-token', async (req, res) => {
     }
 });
 
-// Ruta para el registro de usuarios (accesible para todos)
-router.post('/register', async (req, res) => {
-    const { name, email, mobile, password } = req.body;
+
+// Ruta post Admi clientes
+router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) => {
+    const { name, lastname, mobile, idEnterprice, email, password, imgProfile, role } = req.body;
 
     try {
-        // Validar que todos los campos requeridos estén presentes
-        if (!name || !email || !password) {
-            throw new Error("Se requieren el nombre, correo electrónico y contraseña");
-        }
-
-        // Validar el formato del correo electrónico
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            throw new Error("El formato del correo electrónico no es válido");
-        }
-
-        // Validar el formato del número de celular (si se proporciona)
-        if (mobile) {
-            const mobileRegex = /^\d{10}$/;
-            if (!mobileRegex.test(mobile)) {
-                throw new Error("El formato del número de celular no es válido");
-            }
-        }
-
-        // Verificar si el usuario ya existe en la base de datos
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            throw new Error("El usuario ya existe");
-        }
-
-        // Encriptar la contraseña
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // Crear el usuario en la base de datos
-        await User.create({
-            name,
-            email,
-            mobile,
-            password: hashedPassword,
-            role: 'Visualizador' // Asignar el rol por defecto al registrarse
-           
-        });
-
-        res.send({ status: "ok", data: "Usuario creado correctamente" });
-    } catch (error) {
-        console.error(error);
-        res.status(400).send({ status: "error", data: error.message });
-    }
-});
-
-// Ruta post para que el administrador cree nuevos usuarios con roles especificos
-
-router.post('/admin/register', checkUserRole('Admin'), async (req, res) => {
-    const { name, email, mobile, password, role } = req.body;
-
-    try {
-        // Verificar si el rol proporcionado es válido
-        const validRoles = ['Admin', 'Rol Visualizador', 'Rol Carga Información', 'ELA Super Usuario'];
+        // Validar si el rol proporcionado es válido
         if (!validRoles.includes(role)) {
             return res.status(400).json({ status: "error", data: "El rol proporcionado no es válido" });
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !email || !password || !role) {
-            throw new Error("Se requieren el nombre, correo electrónico, contraseña y rol");
+        if (!name || !lastname || !mobile || !idEnterprice || !email || !password || !role) {
+            throw new Error("Se requieren nombre, apellido, móvil, ID de empresa, correo electrónico, contraseña y rol");
         }
 
         // Validar el formato del correo electrónico
@@ -142,18 +95,10 @@ router.post('/admin/register', checkUserRole('Admin'), async (req, res) => {
             throw new Error("El formato del correo electrónico no es válido");
         }
 
-        // Validar el formato del número de celular (si se proporciona)
-        if (mobile) {
-            const mobileRegex = /^\d{10}$/;
-            if (!mobileRegex.test(mobile)) {
-                throw new Error("El formato del número de celular no es válido");
-            }
-        }
-
-        // Verificar si el rol proporcionado es válido
-        const validRole = roles && roles.includes(role);
-        if (!validRole) {
-            throw new Error("El rol proporcionado no es válido");
+        // Validar el formato del número de celular
+        const mobileRegex = /^\d{10}$/;
+        if (!mobileRegex.test(mobile)) {
+            throw new Error("El formato del número de celular no es válido");
         }
 
         // Verificar si el usuario ya existe en la base de datos
@@ -169,19 +114,93 @@ router.post('/admin/register', checkUserRole('Admin'), async (req, res) => {
         // Crear el usuario en la base de datos con el rol proporcionado
         await User.create({
             name,
-            email,
+            lastname,
             mobile,
+            idEnterprice,
+            email,
             password: hashedPassword,
-            role
-        
+            imgProfile,
+            role:"Cliente"
         });
 
-        res.send({ status: "ok", data: "Usuario creado correctamente con el rol asignado" });
+        res.send({ status: "ok", data: "Usuario creado " });
     } catch (error) {
         console.error(error);
         res.status(400).send({ status: "error", data: error.message });
     }
+});
 
+// Ruta registro Ela
+
+router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
+    const { name, lastname, idEnterprice, email, password, imgProfile, role } = req.body;
+
+    try {
+        // Validar si el rol proporcionado es válido
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ status: "error", data: "El rol proporcionado no es válido" });
+        }
+
+        // Validar que todos los campos requeridos estén presentes
+        if (!name || !lastname || !idEnterprice || !email || !password || !imgProfile || !role) {
+            throw new Error("Se requieren nombre, apellido, ID de empresa, correo electrónico, contraseña, imagen de perfil y rol");
+        }
+
+        // Validar el formato del correo electrónico
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error("El formato del correo electrónico no es válido");
+        }
+
+        // Verificar si el usuario ya existe en la base de datos
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ status: "error", data: "El usuario ya existe" });
+        }
+
+        // Encriptar la contraseña
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Crear el usuario en la base de datos con el rol proporcionado
+        await User.create({
+            name,
+            lastname,
+            idEnterprice: "ELa",
+            email,
+            password: hashedPassword,
+            imgProfile,
+            role
+        });
+
+        res.send({ status: "ok", data: "Usuario creado " });
+    } catch (error) {
+        console.error(error);
+        res.status(400).send({ status: "error", data: error.message });
+    }
+});
+
+// Ruta para redirigir a la imagen de perfil de un usuario por su ID
+router.get('/image/:userId', checkUserRole('Admin'), async (req, res) => {
+    try {
+        // Encuentra el usuario en la base de datos por su ID
+        const user = await User.findById(req.params.userId);
+
+        if (!user) {
+            return res.status(404).json({ status: "error", data: "Usuario no encontrado" });
+        }
+
+        // Verifica si el usuario tiene una imagen de perfil
+        if (!user.imgProfile) {
+            return res.status(404).json({ status: "error", data: "El usuario no tiene una imagen" });
+        }
+
+        // Redirige al navegador a la URL de la imagen
+        res.redirect(user.imgProfile);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: "error", data: "Error " });
+    }
 });
 
 // Ruta PUT para actualizar la información del usuario
@@ -251,5 +270,5 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 
-module.exports = router;
 
+module.exports = router;

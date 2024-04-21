@@ -10,6 +10,11 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt'); 
 const cors = require('cors');
 const calculosAgua = require("./src/controllers/calculosAgua");
+const path = require('path');
+const fs = require('fs');
+const excelRoutes = require("./src/routes/excelRoutes");
+empresaRoutes = require("./src/routes/EmpresaRoutes");
+
 
 
 // Importar el modelo de usuario
@@ -19,14 +24,12 @@ const app = express();
 app.use(cors()); // Configuración de CORS
 app.use(express.json());
 
-
-
 // Conexión a MongoDB
 const mongoUrl = "mongodb+srv://adminEla:jn8LOqeW4Z1mDNpD@cluster0.rpysdem.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(mongoUrl)
   .then(() => {
-    console.log("Base de datos conectada");
+    console.log("Base de datos conectada");  
 
     // Configuración básica de Winston
     const logger = winston.createLogger({
@@ -43,11 +46,14 @@ mongoose.connect(mongoUrl)
     app.use("/auth", authenticationRoutes);
     app.use("/bloc-informativo", blocInformativoRoutes);
     app.use("/user", userRoutes);
-    app.use("/upload", uploadRoutes); // Utiliza uploadRoutes en lugar de upload
+    app.use("/upload", uploadRoutes); 
     app.use("/calculos-agua", calculosAgua);
+    app.use('/excel', excelRoutes);
+    app.use("/empresa", empresaRoutes);
+   
 
     // Ruta de carga de archivos
-    app.post("/upload", uploadRoutes, (req, res) => {
+    app.post('/upload', uploadRoutes, (req, res) => {
       res.status(200).send("Imagen cargada con éxito");
     });
 
@@ -266,9 +272,38 @@ app.get("/filter_users", async (req, res) => {
   }
 });
 
+// Ruta para servir archivos estáticos (por ejemplo, imágenes)
+app.get('/download/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, '/src/uploads', filename);
 
+  // Verifica si el archivo existe antes de descargarlo
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, (err) => {
+      if (err) {
+        console.log('Error al descargar el archivo:', err);
+        res.status(500).send('Error al descargar el archivo');
+      }
+    });
+  } else {
+    console.log('Archivo no encontrado:', filePath);
+    res.status(404).send('Archivo no encontrado');
+  }
+});
 
+// Ruta para consultar los roles disponibles
+app.get("/roles", async (req, res) => {
+  try {
+    // Obtener los roles disponibles del modelo UserDetails
+    const roles = await UserDetails.schema.path("role").enumValues;
 
+    // Responder con la lista de roles
+    res.status(200).json({ status: "ok", data: roles });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error", message: "Error al consultar los roles" });
+  }
+});
     // Manejo de la ruta raíz
     app.get("/", (req, res) => {
       res.send({ status: "Inicio" });
