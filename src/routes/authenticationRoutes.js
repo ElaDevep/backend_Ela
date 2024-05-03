@@ -74,7 +74,7 @@ router.post('/validate-token', async (req, res) => {
 });
 
 
-// Ruta post Admi clientes
+// Ruta post Admi clientes Rgister
 router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) => {
     const { name, lastname, mobile, idEnterprice, email, password, imgProfile, role } = req.body;
 

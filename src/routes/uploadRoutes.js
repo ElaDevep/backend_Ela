@@ -1,3 +1,5 @@
+// Subir imagenes y documentos excel, word, etc.
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -46,4 +48,3 @@ router.post('/upload', upload.single('myFile'), (req, res) => {
 });
 
 module.exports = router;
-

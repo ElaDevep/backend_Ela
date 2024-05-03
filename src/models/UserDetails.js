@@ -9,7 +9,7 @@ const UserDetailSchema = new mongoose.Schema({
     email: { type: String, unique: true },
     mobile: String,
     password: String,
-    idEnterprice: { type: String, required: true },
+    idEnterprice: String,
     role: { type: String, enum: roles, default: 'Admin' }, // Campo para el rol del usuario
     approved: { type: Boolean, default: false }, // Aprobación de notas en el bloc informativo
     imgProfile: { type: String, required: false }

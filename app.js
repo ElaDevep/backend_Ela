@@ -317,4 +317,3 @@ app.get("/roles", async (req, res) => {
   .catch((e) => {
     console.log(e);
   });
-
