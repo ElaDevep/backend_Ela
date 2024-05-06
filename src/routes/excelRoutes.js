@@ -169,5 +169,87 @@ router.get('/resultados/:id/:mes', async (req, res) => {
     res.status(500).send('Error al descargar los resultados.');
   }
 });
+// Endpoint para visualizar solo los resultados
+router.get('/resul/:id/:mes', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const mes = req.params.mes;
+
+    // Buscar el archivo en la base de datos por su ID y mes
+    const archivo = await Archivo.findOne({ _id: id, 'resultados.mes': mes });
+
+    if (!archivo) {
+      return res.status(404).send('Archivo no encontrado');
+    }
+
+    // Extraer los resultados del archivo
+    const resultados = archivo.resultados;
+
+    res.status(200).json(resultados);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error al obtener los resultados.');
+  }
+});
+
+
+// Endpoint para descargar el archivo Excel histórico
+router.get('/historico', async (req, res) => {
+  try {
+    // Obtener todos los archivos de la base de datos
+    const archivos = await Archivo.find();
+
+    // Crear un nuevo libro de Excel para el histórico
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Historico');
+    worksheet.columns = [
+      { header: 'Nombre del archivo', key: 'nombre' },
+      { header: 'Ruta', key: 'ruta' },
+      { header: '% Reducción o Ahorro Hídrico', key: 'reduccionAhorroHidrico', type: 'number' },
+      { header: '% Variación', key: 'variacion', type: 'number' },
+      { header: '% Variación Consumo de Recursos y/o Materias Primas', key: 'variacionConsumoRecursos', type: 'number' },
+      { header: 'N Poliza', key: 'nPoliza' },
+      { header: 'Nombre del cliente', key: 'nombreCliente' },
+      { header: 'Tipo de negocio', key: 'tipoNegocio' },
+      { header: 'Lugar', key: 'lugar' },
+      { header: 'Mes', key: 'mes' },
+      { header: 'Fecha de subida', key: 'fechaSubida', type: 'date' }
+    ];
+
+    // Agregar cada archivo y sus resultados al Excel histórico
+    archivos.forEach(archivo => {
+      worksheet.addRow({
+        nombre: archivo.nombre,
+        ruta: archivo.ruta,
+        reduccionAhorroHidrico: archivo.resultados.reduccionAhorroHidrico,
+        variacion: archivo.resultados.variacion,
+        variacionConsumoRecursos: archivo.resultados.VariacionConsumoRecursos,
+        nPoliza: archivo.resultados.nPoliza,
+        nombreCliente: archivo.resultados.nombreCliente,
+        tipoNegocio: archivo.resultados.tipoNegocio,
+        lugar: archivo.resultados.lugar,
+        mes: archivo.resultados.mes,
+        fechaSubida: archivo.fechaSubida
+      });
+    });
+
+    // Generar el nombre del archivo para descargar
+    const filename = 'historico.xlsx';
+
+    // Generar el archivo Excel en memoria
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Enviar el archivo al cliente como descarga
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.send(buffer);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error al descargar el histórico.');
+  }
+});
+
+module.exports = router;
+
 
 module.exports = router;
