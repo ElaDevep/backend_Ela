@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/UserDetails');
-const Empresa = require('../models/empresa');
+const Empresa = require('../models/Empresa');
 
 // Ruta para crear una nueva empresa
 router.post('/empresas', async (req, res) => {
