@@ -95,6 +95,11 @@ router.post('/uploadEnergia', upload.single('file'), async (req, res) => {
     const mes = worksheet.getCell('C129').value;
 
     const resultados = {
+      nNic,
+      nombreCliente,
+      tipoNegocio,
+      lugar,
+      mes,
       variacionConsumoEnergia,
       variacionConsumoNoAsociado,
       variacionCostosEnergia,
@@ -103,17 +108,18 @@ router.post('/uploadEnergia', upload.single('file'), async (req, res) => {
       variacionProporcionEnergia,
       variacionPuntoMedicion,
       variacionDiagnosticoEnergetico,
-      variacionPersonalCapacitado,
-      nNic,
-      nombreCliente,
-      tipoNegocio,
-      lugar,
-      mes
+      variacionPersonalCapacitado
+      
     };
     // Guardar los resultados en un nuevo libro de Excel
     const resultWorkbook = new ExcelJS.Workbook();
     const resultWorksheet = resultWorkbook.addWorksheet('Resultados');
     resultWorksheet.columns = [
+      { header: 'N Nic', key: 'nNic' },
+      { header: 'Nombre del cliente', key: 'nombreCliente' },
+      { header: 'Tipo de negocio', key: 'tipoNegocio' },
+      { header: 'Lugar', key: 'lugar' },
+      { header: 'Mes', key: 'mes' },
       { header: '% Variacion Consumo de Energia', key: 'variacionConsumoEnergia', type: 'number' },
       { header: '% Variación Consumo no Asociado', key: 'variacionConsumoNoAsociado', type: 'number' },
       { header: '% Variación Costos de Energia', key: 'variacionCostosEnergia', type: 'number' },
@@ -122,15 +128,15 @@ router.post('/uploadEnergia', upload.single('file'), async (req, res) => {
       { header: '% Variación de Proporción Energetica', key: 'variacionProporcionEnergia', type: 'number' },
       { header: '% Variación de Punto de medición', key: 'variacionPuntoMedicion', type: 'number' },
       { header: '% Variación Diagnostico Energetico', key: 'variacionDiagnosticoEnergetico', type: 'number' },
-      { header: '% Variación Personal Capacitado', key: 'variacionPersonalCapacitado', type: 'number' },
+      { header: '% Variación Personal Capacitado', key: 'variacionPersonalCapacitado', type: 'number' }
 
-      { header: 'N Nic', key: 'nNic' },
-      { header: 'Nombre del cliente', key: 'nombreCliente' },
-      { header: 'Tipo de negocio', key: 'tipoNegocio' },
-      { header: 'Lugar', key: 'lugar' },
-      { header: 'Mes', key: 'mes' },
     ];
     resultWorksheet.addRow({
+        nNic: resultados.nNic,
+        nombreCliente: resultados.nombreCliente,
+        tipoNegocio: resultados.tipoNegocio,
+        lugar: resultados.lugar,
+        mes: resultados.mes,
         variacionConsumoEnergia: resultados.variacionConsumoEnergia,
         variacionConsumoNoAsociado: resultados.variacionConsumoNoAsociado,
         variacionCostosEnergia: resultados.variacionCostosEnergia,
@@ -139,12 +145,8 @@ router.post('/uploadEnergia', upload.single('file'), async (req, res) => {
         variacionProporcionEnergia: resultados.variacionProporcionEnergia,
         variacionPuntoMedicion: resultados.variacionPuntoMedicion,
         variacionDiagnosticoEnergetico: resultados.variacionDiagnosticoEnergetico,
-        variacionPersonalCapacitado: resultados.variacionPersonalCapacitado,
-        nNic: resultados.nNic,
-        nombreCliente: resultados.nombreCliente,
-        tipoNegocio: resultados.tipoNegocio,
-        lugar: resultados.lugar,
-        mes: resultados.mes
+        variacionPersonalCapacitado: resultados.variacionPersonalCapacitado
+        
       });
       const resultDirPath = path.join(__dirname, '../uploads/excelEnergia');
     const resultFilePath = path.join(resultDirPath, `resultados_${file.originalname}`);
@@ -184,6 +186,12 @@ router.get('/resultadosE/:id/:mes', async (req, res) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Resultados');
     worksheet.columns = [
+
+      { header: 'N Nic', key: 'nNic' },
+      { header: 'Nombre del cliente', key: 'nombreCliente' },
+      { header: 'Tipo de negocio', key: 'tipoNegocio' },
+      { header: 'Lugar', key: 'lugar' },
+      { header: 'Mes', key: 'mes' },
       { header: '% Variacion Consumo de Energia', key: 'variacionConsumoEnergia', type: 'number' },
       { header: '% Variación Consumo no Asociado', key: 'variacionConsumoNoAsociado', type: 'number' },
       { header: '% Variación Costos de Energia', key: 'variacionCostosEnergia', type: 'number' },
@@ -192,15 +200,16 @@ router.get('/resultadosE/:id/:mes', async (req, res) => {
       { header: '% Variación de Proporción Energetica', key: 'variacionProporcionEnergia', type: 'number' },
       { header: '% Variación de Punto de medición', key: 'variacionPuntoMedicion', type: 'number' },
       { header: '% Variación Diagnostico Energetico', key: 'variacionDiagnosticoEnergetico', type: 'number' },
-      { header: '% Variación Personal Capacitado', key: 'variacionPersonalCapacitado', type: 'number' },
-      { header: 'N Nic', key: 'nNic' },
-      { header: 'Nombre del cliente', key: 'nombreCliente' },
-      { header: 'Tipo de negocio', key: 'tipoNegocio' },
-      { header: 'Lugar', key: 'lugar' },
-      { header: 'Mes', key: 'mes' },
+      { header: '% Variación Personal Capacitado', key: 'variacionPersonalCapacitado', type: 'number' }
+     
     ];
 
     worksheet.addRow({
+      nNic: resultados.nNic,
+      nombreCliente: resultados.nombreCliente,
+      tipoNegocio: resultados.tipoNegocio,
+      lugar: resultados.lugar,
+      mes: resultados.mes,
       variacionConsumoEnergia: resultados.variacionConsumoEnergia,
       variacionConsumoNoAsociado: resultados.variacionConsumoNoAsociado,
       variacionCostosEnergia: resultados.variacionCostosEnergia,
@@ -209,12 +218,8 @@ router.get('/resultadosE/:id/:mes', async (req, res) => {
       variacionProporcionEnergia: resultados.variacionProporcionEnergia,
       variacionPuntoMedicion: resultados.variacionPuntoMedicion,
       variacionDiagnosticoEnergetico: resultados.variacionDiagnosticoEnergetico,
-      variacionPersonalCapacitado: resultados.variacionPersonalCapacitado,
-      nNic: resultados.nNic,
-      nombreCliente: resultados.nombreCliente,
-      tipoNegocio: resultados.tipoNegocio,
-      lugar: resultados.lugar,
-      mes: resultados.mes
+      variacionPersonalCapacitado: resultados.variacionPersonalCapacitado
+     
     });
 
     const filename = `resultados_${archivo._id}_${mes}.xlsx`;
@@ -231,39 +236,53 @@ router.get('/resultadosE/:id/:mes', async (req, res) => {
 });
 
 // Endpoint para descargar el archivo Excel histórico
-router.get('/historico', async (req, res) => {
+router.get('/historicoE', async (req, res) => {
   try {
     const archivos = await ArchivoEnergia.find();
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Historico');
     worksheet.columns = [
-      { header: 'Nombre del archivo', key: 'nombre' },
-      { header: 'Ruta', key: 'ruta' },
-      { header: '% Variacion Consumo de Energia', key: 'variacionConsumoEnergia', type: 'number' },
-      { header: '% Variación Consumo no Asociado', key: 'variacionConsumoNoAsociado', type: 'number' },
-      // Include other headers as needed
       { header: 'N Nic', key: 'nNic' },
       { header: 'Nombre del cliente', key: 'nombreCliente' },
       { header: 'Tipo de negocio', key: 'tipoNegocio' },
       { header: 'Lugar', key: 'lugar' },
       { header: 'Mes', key: 'mes' },
-      { header: 'Fecha de subida', key: 'fechaSubida', type: 'date' }
+      { header: 'Fecha de subida', key: 'fechaSubida', type: 'date' },
+      { header: 'Nombre del archivo', key: 'nombre' },
+      { header: 'Ruta', key: 'ruta' },
+      { header: '% Variacion Consumo de Energia', key: 'variacionConsumoEnergia', type: 'number' },
+      { header: '% Variación Consumo no Asociado', key: 'variacionConsumoNoAsociado', type: 'number' },
+      { header: '% Variación Costos de Energia', key: 'variacionCostosEnergia', type: 'number' },
+      { header: '% Variación Gases de Efecto invernadero', key: 'variacionGasesInvernadero', type: 'number' },
+      { header: '% Variación Producción Energetica', key: 'variacionProduccionEnergetica', type: 'number' },
+      { header: '% Variación de Proporción Energetica', key: 'variacionProporcionEnergia', type: 'number' },
+      { header: '% Variación de Punto de medición', key: 'variacionPuntoMedicion', type: 'number' },
+      { header: '% Variación Diagnostico Energetico', key: 'variacionDiagnosticoEnergetico', type: 'number' },
+      { header: '% Variación Personal Capacitado', key: 'variacionPersonalCapacitado', type: 'number' }
+     
     ];
 
     archivos.forEach(archivo => {
       worksheet.addRow({
-        nombre: archivo.nombre,
-        ruta: archivo.ruta,
-        variacionConsumoEnergia: archivo.resultados.variacionConsumoEnergia,
-        variacionConsumoNoAsociado: archivo.resultados.variacionConsumoNoAsociado,
-        // Include other data as needed
         nNic: archivo.resultados.nNic,
         nombreCliente: archivo.resultados.nombreCliente,
         tipoNegocio: archivo.resultados.tipoNegocio,
         lugar: archivo.resultados.lugar,
         mes: archivo.resultados.mes,
-        fechaSubida: archivo.fechaSubida
+        fechaSubida: archivo.fechaSubida,
+        nombre: archivo.nombre,
+        ruta: archivo.ruta,
+        variacionConsumoEnergia: archivo.resultados.variacionConsumoEnergia,
+        variacionConsumoNoAsociado: archivo.resultados.variacionConsumoNoAsociado,
+        variacionCostosEnergia: archivo.resultados.variacionCostosEnergia,
+        variacionGasesInvernadero: archivo.resultados.variacionGasesInvernadero,
+        variacionProduccionEnergetica: archivo.resultados.variacionProduccionEnergetica,
+        variacionProporcionEnergia: archivo.resultados.variacionProporcionEnergia,
+        variacionPuntoMedicion: archivo.resultados.variacionPuntoMedicion,
+        variacionDiagnosticoEnergetico: archivo.resultados.variacionDiagnosticoEnergetico,
+        variacionPersonalCapacitado: archivo.resultados.variacionPersonalCapacitado
+        
       });
     });
 
@@ -279,6 +298,48 @@ router.get('/historico', async (req, res) => {
     res.status(500).send('Error al descargar el histórico.');
   }
 });
+
+// endpoint para visualizar los datos 
+router.get('/resulE/:id/:mes', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const mes = req.params.mes;
+
+    const archivo = await ArchivoEnergia.findOne({ _id: id, 'resultados.mes': mes });
+
+    if (!archivo) {
+      return res.status(404).send('Archivo no encontrado');
+    }
+
+    const resultados = archivo.resultados;
+
+    // Construir un nuevo objeto para ordenar la respuesta
+    const respuestaOrdenada = {
+      nNic: resultados.nNic,
+      nombreCliente: resultados.nombreCliente,
+      tipoNegocio: resultados.tipoNegocio,
+      lugar: resultados.lugar,
+      mes: resultados.mes,
+      variaciones: {
+        variacionConsumoEnergia: resultados.variacionConsumoEnergia,
+        variacionConsumoNoAsociado: resultados.variacionConsumoNoAsociado,
+        variacionCostosEnergia: resultados.variacionCostosEnergia,
+        variacionGasesInvernadero: resultados.variacionGasesInvernadero,
+        variacionProduccionEnergetica: resultados.variacionProduccionEnergetica,
+        variacionProporcionEnergia: resultados.variacionProporcionEnergia,
+        variacionPuntoMedicion: resultados.variacionPuntoMedicion,
+        variacionDiagnosticoEnergetico: resultados.variacionDiagnosticoEnergetico,
+        variacionPersonalCapacitado: resultados.variacionPersonalCapacitado
+      }
+    };
+
+    res.status(200).json(respuestaOrdenada);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error al obtener los resultados.');
+  }
+});
+
 
 module.exports = router;
  
