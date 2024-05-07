@@ -13,7 +13,9 @@ const calculosAgua = require("./src/controllers/calculosAgua");
 const path = require('path');
 const fs = require('fs');
 const excelRoutes = require("./src/routes/excelRoutes");
+const excelEnergiaRoutes =require("./src/routes/excelEnergiaRoutes")
 empresaRoutes = require("./src/routes/empresaRoutes");
+
 
 
 
@@ -50,6 +52,7 @@ mongoose.connect(mongoUrl)
     app.use("/calculos-agua", calculosAgua);
     app.use('/excel', excelRoutes);
     app.use("/empresa", empresaRoutes);
+    app.use('/excelEnergia',excelEnergiaRoutes);
    
 
     // Ruta de carga de archivos

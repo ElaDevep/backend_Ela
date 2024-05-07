@@ -21,7 +21,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const Mes = req.body.mes;
 
     const fileData = fs.readFileSync(file.path);
-    const uploadPath = path.join(__dirname, '../uploads', file.originalname);
+    const uploadPath = path.join(__dirname, '../uploads/excelGenereado', file.originalname);
     fs.writeFileSync(uploadPath, fileData);
 
     const workbook = new ExcelJS.Workbook();
@@ -251,5 +251,3 @@ router.get('/historico', async (req, res) => {
 
 module.exports = router;
 
-
-module.exports = router;

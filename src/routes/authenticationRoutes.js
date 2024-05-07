@@ -109,7 +109,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
 
         // Encriptar la contraseña
         const saltRounds = 10;
-        const hashedPassword = await bcryptjs.hash(password, saltRounds);
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // Crear el usuario en la base de datos con el rol proporcionado
         await User.create({
@@ -160,7 +160,7 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
 
         // Encriptar la contraseña
         const saltRounds = 10;
-        const hashedPassword = await bcryptjs.hash(password, saltRounds);
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // Crear el usuario en la base de datos con el rol proporcionado
         await User.create({
