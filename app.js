@@ -125,7 +125,7 @@ app.post('/forgot-password', async (req, res) => {
       const token = jwt.sign({ email: req.body.email }, 'tu_secreto', { expiresIn: '1h' });
 
       // Construir URL de restablecimiento de contraseña
-      const resetUrl = `http://localhost:3000/restore_password?/${token}`;
+      const resetUrl = `http://localhost:3000/recuperacion_contrasena/${token}`;
 
       // Configurar el correo electrónico
       const mailOptions = {
