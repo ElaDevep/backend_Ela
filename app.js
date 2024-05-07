@@ -128,7 +128,7 @@ app.post('/forgot-password', async (req, res) => {
       const token = jwt.sign({ email: req.body.email }, 'tu_secreto', { expiresIn: '1h' });
 
       // Construir URL de restablecimiento de contraseña
-      const resetUrl = `https://ela-platform-front.vercel.app/recuperación_contraseña/${token}`;
+      const resetUrl = `https://ela-platform-front.vercel.app/recuperación_contrasena/${token}`;
 
       // Configurar el correo electrónico
       const mailOptions = {
