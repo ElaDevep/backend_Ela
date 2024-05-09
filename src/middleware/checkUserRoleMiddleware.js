@@ -1,4 +1,3 @@
-
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserDetails");
 
@@ -35,4 +34,3 @@ const checkUserRole = (requiredRole) => {
 };
 
 module.exports = checkUserRole;
-

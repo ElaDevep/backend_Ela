@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserDetails");
 const { UserDetailSchema, roles } = require("../models/UserDetails");
@@ -74,7 +74,7 @@ router.post('/validate-token', async (req, res) => {
 });
 
 
-// Ruta post Admi clientes
+// Ruta post Admi clientes Rgister
 router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) => {
     const { name, lastname, mobile, idEnterprice, email, password, imgProfile, role } = req.body;
 
@@ -109,7 +109,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
 
         // Encriptar la contraseña
         const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const hashedPassword = await bcryptjs.hash(password, saltRounds);
 
         // Crear el usuario en la base de datos con el rol proporcionado
         await User.create({
@@ -160,7 +160,7 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
 
         // Encriptar la contraseña
         const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const hashedPassword = await bcryptjs.hash(password, saltRounds);
 
         // Crear el usuario en la base de datos con el rol proporcionado
         await User.create({

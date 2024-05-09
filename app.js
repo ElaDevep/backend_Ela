@@ -7,13 +7,13 @@ const userRoutes = require("./src/routes/userRoutes");
 const uploadRoutes = require("./src/routes/uploadRoutes");
 const nodemailer = require('nodemailer');
 const jwt = require("jsonwebtoken");
-const bcrypt = require('bcrypt'); 
+const bcrypt = require("bcryptjs");
 const cors = require('cors');
 const calculosAgua = require("./src/controllers/calculosAgua");
 const path = require('path');
 const fs = require('fs');
 const excelRoutes = require("./src/routes/excelRoutes");
-empresaRoutes = require("./src/routes/EmpresaRoutes");
+empresaRoutes = require("./src/routes/empresaRoutes");
 
 
 
@@ -317,4 +317,3 @@ app.get("/roles", async (req, res) => {
   .catch((e) => {
     console.log(e);
   });
-
