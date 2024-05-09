@@ -5,8 +5,6 @@ const checkUserRole = require('../middleware/checkUserRoleMiddleware');
 const User = require('../models/UserDetails');
 
 
-
-
 // Ruta para cargar un archivo
 router.use('/upload', uploadRoutes);
 

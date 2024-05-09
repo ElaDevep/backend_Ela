@@ -179,6 +179,35 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
         res.status(400).send({ status: "error", data: error.message });
     }
 });
+// Ruta para consultar usuarios Cliente
+router.get('/admin/usuariosCliente', checkUserRole('Admin'), async (req, res) => {
+    try {
+        // Buscar todos los usuarios con rol "Cliente" en la base de datos
+        const usuarios = await User.find({ role: "Cliente" });
+        
+        // Responder con la lista de usuarios Cliente
+        res.status(200).json({ status: "success", data: usuarios });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: "error", message: "Error al consultar los usuarios Cliente" });
+    }
+});
+
+  
+ // Ruta para consultar usuarios ELa
+router.get('/admin/usuariosEla', checkUserRole('Admin'), async (req, res) => {
+    try {
+        // Buscar todos los usuarios que no tengan el rol "Cliente" en la base de datos
+        const usuarios = await User.find({ role: { $ne: "Cliente" } });
+        
+        // Responder con la lista de usuarios ELa
+        res.status(200).json({ status: "success", data: usuarios });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: "error", message: "Error al consultar los usuarios ELa" });
+    }
+});
+
 
 // Ruta para redirigir a la imagen de perfil de un usuario por su ID
 router.get('/image/:userId', checkUserRole('Admin'), async (req, res) => {
@@ -268,7 +297,6 @@ router.get('/user/:userId', async (req, res) => {
         res.status(500).send({ status: "error", data: "Error en el servidor" });
     }
 });
-
 
 
 module.exports = router;
