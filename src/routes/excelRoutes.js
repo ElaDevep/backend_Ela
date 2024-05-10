@@ -11,7 +11,7 @@ const upload = multer({ dest: '../uploads' });
 
 
 // Modulo agua
-// Ruta para subir el archivo de la usuaria y procesarlo
+
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     console.log(req.file);
