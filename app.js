@@ -15,6 +15,7 @@ const fs = require('fs');
 const excelRoutes = require("./src/routes/excelRoutes");
 const excelEnergiaRoutes =require("./src/routes/excelEnergiaRoutes")
 empresaRoutes = require("./src/routes/empresaRoutes");
+const checkUserRole = require("./src/middleware/checkUserRoleMiddleware");
 
 
 
@@ -206,7 +207,7 @@ app.post('/reset-password', async (req, res) => {
   }
 });
 
-// Ruta para consultar todos los usuarios
+
 app.get("/usuarios", async (req, res) => {
   try {
     // Buscar todos los usuarios en la base de datos
