@@ -23,6 +23,10 @@ const checkUserRole = (requiredRole) => {
             if (!user || !validRoles.includes(user.role)) {
                 return res.status(403).json({ status: "error", data: "No tienes permisos para realizar esta acción" });
             }
+            // Verificar si el usuario tiene el rol de "Admin"
+            if (user.role !== 'Admin') {
+            return res.status(403).json({ status: "error", data: "No tienes permisos de administrador para realizar esta acción" });
+        }
 
             // Continuar con la siguiente función de middleware si el usuario tiene el rol requerido
             next();

@@ -14,9 +14,9 @@ const path = require('path');
 const fs = require('fs');
 const excelRoutes = require("./src/routes/excelRoutes");
 const excelEnergiaRoutes =require("./src/routes/excelEnergiaRoutes")
-empresaRoutes = require("./src/routes/empresaRoutes");
 const checkUserRole = require("./src/middleware/checkUserRoleMiddleware");
-
+const excelResiduosRoutes =require("./src/routes/excelResiduosRoutes");
+empresaRoutes = require("./src/routes/empresaRoutes");
 
 
 
@@ -54,6 +54,7 @@ mongoose.connect(mongoUrl)
     app.use('/excel', excelRoutes);
     app.use("/empresa", empresaRoutes);
     app.use('/excelEnergia',excelEnergiaRoutes);
+    app.use('/excelResiduos',excelResiduosRoutes);
    
 
     // Ruta de carga de archivos
@@ -207,7 +208,6 @@ app.post('/reset-password', async (req, res) => {
   }
 });
 
-
 app.get("/usuarios", async (req, res) => {
   try {
     // Buscar todos los usuarios en la base de datos
@@ -220,6 +220,43 @@ app.get("/usuarios", async (req, res) => {
     res.status(500).json({ status: "error", message: "Error al consultar los usuarios" });
   }
 });
+// cambio de contraseña
+app.put('/change-password/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    // Verificar que las contraseñas nueva y de confirmación sean iguales
+    if (newPassword !== confirmPassword) {
+      return res.status(400).send('Las contraseñas nueva y de confirmación no coinciden');
+    }
+
+    // Buscar al usuario por ID
+    const user = await UserDetails.findById(userId);
+    if (!user) {
+      return res.status(404).send('Usuario no encontrado');
+    }
+
+    // Verificar la contraseña actual del usuario
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).send('La contraseña actual es incorrecta');
+    }
+
+    // Encriptar la nueva contraseña
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar la contraseña del usuario en la base de datos
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.status(200).send('Contraseña cambiada exitosamente');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al cambiar la contraseña');
+  }
+});
+
 
 // Ruta GET para filtrar usuarios
 app.get("/filter_users", async (req, res) => {

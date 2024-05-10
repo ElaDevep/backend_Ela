@@ -7,6 +7,7 @@ const { UserDetailSchema, roles } = require("../models/UserDetails");
 const checkUserRole = require("../middleware/checkUserRoleMiddleware");
 const path = require('path');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
 
 
 // Definir los roles válidos
@@ -73,10 +74,19 @@ router.post('/validate-token', async (req, res) => {
     }
 });
 
+ // Configuración del transporter de nodemailer
+ const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'developmentELA@gmail.com',
+        pass: 'ghey kptl qckc tkbi'
+    }
+  });
 
-// Ruta post Admi clientes Rgister
+  //Registro clientes
+
 router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) => {
-    const { name, lastname, mobile, idEnterprice, email, password, imgProfile, role } = req.body;
+    const { name, lastname, mobile, idEnterprice, email, imgProfile, role } = req.body;
 
     try {
         // Validar si el rol proporcionado es válido
@@ -85,8 +95,8 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !lastname || !mobile || !idEnterprice || !email || !password || !role) {
-            throw new Error("Se requieren nombre, apellido, móvil, ID de empresa, correo electrónico, contraseña y rol");
+        if (!name || !lastname || !mobile || !idEnterprice || !email || !role) {
+            throw new Error("Se requieren nombre, apellido, móvil, ID de empresa, correo electrónico y rol");
         }
 
         // Validar el formato del correo electrónico
@@ -95,7 +105,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
             throw new Error("El formato del correo electrónico no es válido");
         }
 
-        // Validar el formato del número de celular
+        // Validar el formato del celular
         const mobileRegex = /^\d{10}$/;
         if (!mobileRegex.test(mobile)) {
             throw new Error("El formato del número de celular no es válido");
@@ -107,11 +117,14 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
             return res.status(400).json({ status: "error", data: "El usuario ya existe" });
         }
 
-        // Encriptar la contraseña
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // generar contraseña temporal
+        const temporaryPassword = Math.random().toString(36).slice(-8);
 
-        // Crear el usuario en la base de datos con el rol proporcionado
+        //encriptar contraseña
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(temporaryPassword, saltRounds);
+
+        //crear usuario en la base de datos
         await User.create({
             name,
             lastname,
@@ -120,10 +133,26 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
             email,
             password: hashedPassword,
             imgProfile,
-            role:"Cliente"
+            role: "Cliente"
         });
 
-        res.send({ status: "ok", data: "Usuario creado " });
+        // enviar correo 
+        const mailOptions = {
+            from: 'tu_correo@gmail.com',
+            to: email,
+            subject: 'Contraseña temporal',
+            text: `Tu contraseña temporal es: ${temporaryPassword}`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log(error);
+                res.status(500).send('Error al enviar el correo electrónico');
+            } else {
+                console.log('Correo electrónico enviado: ' + info.response);
+                res.status(200).send('Correo electrónico enviado');
+            }
+        });
     } catch (error) {
         console.error(error);
         res.status(400).send({ status: "error", data: error.message });
@@ -131,9 +160,8 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
 });
 
 // Ruta registro Ela
-
 router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
-    const { name, lastname, idEnterprice, email, password, imgProfile, role } = req.body;
+    const { name, lastname, idEnterprice, email,imgProfile, role } = req.body;
 
     try {
         // Validar si el rol proporcionado es válido
@@ -142,7 +170,7 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !lastname || !idEnterprice || !email || !password || !imgProfile || !role) {
+        if (!name || !lastname || !idEnterprice || !email || !imgProfile || !role) {
             throw new Error("Se requieren nombre, apellido, ID de empresa, correo electrónico, contraseña, imagen de perfil y rol");
         }
 
@@ -158,9 +186,12 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
             return res.status(400).json({ status: "error", data: "El usuario ya existe" });
         }
 
-        // Encriptar la contraseña
+        // generar contraseña temporal
+        const temporaryPassword = Math.random().toString(36).slice(-8);
+
+        //encriptar contraseña
         const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const hashedPassword = await bcrypt.hash(temporaryPassword, saltRounds);
 
         // Crear el usuario en la base de datos con el rol proporcionado
         await User.create({
@@ -173,12 +204,28 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
             role
         });
 
-        res.send({ status: "ok", data: "Usuario creado " });
+         // enviar correo 
+         const mailOptions = {
+            from: 'tu_correo@gmail.com',
+            to: email,
+            subject: 'Contraseña temporal',
+            text: `Tu contraseña temporal es: ${temporaryPassword}`
+        };
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log(error);
+                res.status(500).send('Error al enviar el correo electrónico');
+            } else {
+                console.log('Correo electrónico enviado: ' + info.response);
+                res.status(200).send('Correo electrónico enviado');
+            }
+        });
     } catch (error) {
         console.error(error);
         res.status(400).send({ status: "error", data: error.message });
     }
 });
+
 // Ruta para consultar usuarios Cliente
 router.get('/admin/usuariosCliente', checkUserRole('Admin'), async (req, res) => {
     try {

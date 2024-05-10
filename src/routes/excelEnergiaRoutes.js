@@ -12,7 +12,6 @@ const upload = multer({ dest: '../uploads' });
 
 
 // Modulo Energia
-// Ruta para subir el archivo de la usuaria y procesarlo
 
 router.post('/uploadEnergia', upload.single('file'), async (req, res) => {
     try {
