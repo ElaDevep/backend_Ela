@@ -16,6 +16,7 @@ const excelRoutes = require("./src/routes/excelRoutes");
 const excelEnergiaRoutes =require("./src/routes/excelEnergiaRoutes")
 const checkUserRole = require("./src/middleware/checkUserRoleMiddleware");
 const excelResiduosRoutes =require("./src/routes/excelResiduosRoutes");
+const excelEducacionRoutes = require("./src/routes/excelEducacionRoutes");
 empresaRoutes = require("./src/routes/empresaRoutes");
 
 
@@ -55,6 +56,7 @@ mongoose.connect(mongoUrl)
     app.use("/empresa", empresaRoutes);
     app.use('/excelEnergia',excelEnergiaRoutes);
     app.use('/excelResiduos',excelResiduosRoutes);
+    app.use('/excelEducacion',excelEducacionRoutes);
    
 
     // Ruta de carga de archivos
@@ -62,16 +64,21 @@ mongoose.connect(mongoUrl)
       res.status(200).send("Imagen cargada con éxito");
     });
 
+    const validRoles = ['Admin', 'Cliente', 'Visualizador', 'Carga Información', 'ELA Super Usuario'];
     //Ruta patch para actualizar parcialmente el usuario 
 
     app.patch('/update/:userId', async (req, res) => {
         const userId = req.params.userId;
-        const { name, email, mobile } = req.body;
+        const { name, lastname, email, mobile, empresa, rol, imagen } = req.body;
       
         // Validación de datos
-        if (!name &&!email &&!mobile) {
+        if (!name && !lastname && !email && !mobile && !empresa && !rol && !imagen) {
             return res.status(400).send({ status: "error", data: "No se ha proporcionado ningún dato para actualizar" });
         }
+        // Validar el rol proporcionado
+       if (rol && !validRoles.includes(rol)) {
+         return res.status(400).json({ status: "error", data: "El rol proporcionado no es válido" });
+       }
       
         try {
             // Buscar al usuario en la base de datos por su ID
@@ -87,9 +94,14 @@ mongoose.connect(mongoUrl)
       
             // Actualizar los campos del usuario si se proporcionan
             if (name) user.name = name;
+            if (lastname) user.lastname = lastname;
             if (email) user.email = email;
             if (mobile) user.mobile = mobile;
-      
+            if (empresa) user.empresa = empresa;
+            if (rol) user.rol = rol;
+            if (imagen) user.imagen = imagen;
+            
+                 
             // Guardar los cambios en la base de datos
             await user.save();
       
