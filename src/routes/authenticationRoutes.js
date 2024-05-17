@@ -86,7 +86,7 @@ router.post('/validate-token', async (req, res) => {
   //Registro clientes
 
 router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) => {
-    const { name, lastname, mobile, idEnterprice, email, imgProfile, role } = req.body;
+    const { name, lastname, mobile, idEnterprice, email, imgProfile, role,businessName } = req.body;
 
     try {
         // Validar si el rol proporcionado es válido
@@ -95,7 +95,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !lastname || !mobile || !idEnterprice || !email || !role) {
+        if (!name || !lastname || !mobile || !idEnterprice || !email || !role || !businessName) {
             throw new Error("Se requieren nombre, apellido, móvil, ID de empresa, correo electrónico y rol");
         }
 
@@ -133,7 +133,8 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
             email,
             password: hashedPassword,
             imgProfile,
-            role: "Cliente"
+            role: "Cliente",
+            businessName
         });
 
         // enviar correo 
@@ -161,7 +162,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
 
 // Ruta registro Ela
 router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
-    const { name, lastname, idEnterprice, email,imgProfile, role } = req.body;
+    const { name, lastname, idEnterprice, email,imgProfile, role,businessName } = req.body;
 
     try {
         // Validar si el rol proporcionado es válido
@@ -170,7 +171,7 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !lastname || !idEnterprice || !email || !imgProfile || !role) {
+        if (!name || !lastname || !idEnterprice || !email || !imgProfile || !role|| !businessName) {
             throw new Error("Se requieren nombre, apellido, ID de empresa, correo electrónico, contraseña, imagen de perfil y rol");
         }
 
@@ -201,7 +202,8 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
             email,
             password: hashedPassword,
             imgProfile,
-            role
+            role,
+            businessName
         });
 
          // enviar correo 

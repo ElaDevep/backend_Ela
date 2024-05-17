@@ -19,7 +19,6 @@ const empresaSchema = new mongoose.Schema({
   },
   tipo: {
     type: String,
-    enum: ['Grande'],
     required: true
   }
 });

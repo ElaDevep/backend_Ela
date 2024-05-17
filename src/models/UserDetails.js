@@ -12,12 +12,10 @@ const UserDetailSchema = new mongoose.Schema({
     idEnterprice: String,
     role: { type: String, enum: roles, default: 'Admin' }, // Campo para el rol del usuario
     approved: { type: Boolean, default: false }, // Aprobación de notas en el bloc informativo
-    imgProfile: { type: String, required: false }
+    imgProfile: { type: String, required: false },
+    businessName: String
 }, {
     collection: "UserInfo"
 });
-
-
-
 
 module.exports = mongoose.model('UserDetails', UserDetailSchema);

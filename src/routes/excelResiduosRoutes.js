@@ -14,9 +14,7 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
     try {
         console.log(req.file);
         const file = req.file;
-        const clienteId = req.body.clienteId;
-        const empresaId = req.body.empresaId;
-        const Mes = req.body.mes;
+        
 
         const fileData = fs.readFileSync(file.path);
         const uploadPath = path.join(__dirname, '../uploads/ExcelResiduos', file.originalname);
@@ -59,7 +57,7 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
         const c117 = parseFloat(worksheet.getCell('C117').value.toString().replace(',', '.'));
         const variacionPersonal = ((c117 - c116) / c116) * 100;
 
-        const nNic = worksheet.getCell('C122').value;
+        const nNit = worksheet.getCell('C122').value;
         const nombreCliente = worksheet.getCell('C123').value;
         const tipoNegocio = worksheet.getCell('C124').value;
         const lugar = worksheet.getCell('C126').value;
@@ -67,7 +65,7 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
 
         // Construir el objeto de resultados
         const resultados = {
-            'nNic': nNic,
+            'nNit': nNit,
             'nombreCliente': nombreCliente,
             'tipoNegocio': tipoNegocio,
             'lugar': lugar,
@@ -87,7 +85,7 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
         const resultWorkbook = new ExcelJS.Workbook();
         const resultWorksheet = resultWorkbook.addWorksheet('Resultados');
         resultWorksheet.columns = [
-            { header: 'N Nic', key: 'nNic' },
+            { header: 'N Nit', key: 'nNit' },
             { header: 'Nombre del cliente', key: 'nombreCliente' },
             { header: 'Tipo de negocio', key: 'tipoNegocio' },
             { header: 'Lugar', key: 'lugar' },
@@ -114,8 +112,7 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
             nombre: file.originalname,
             ruta: uploadPath,
             resultados: resultados,
-            cliente: clienteId,
-            empresa: empresaId
+        
         });
         await archivo.save();
 
@@ -127,12 +124,13 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
 });
 
 // Endpoint para descargar el archivo Excel de resultados
-router.get('/resultadosR/:id/:mes', async (req, res) => {
+router.get('/resultadosR/:nit/:id/:mes', async (req, res) => {
     try {
         const id = req.params.id;
         const mes = req.params.mes;
+        const nit = req.params.nit;
 
-        const archivo = await ArchivoResiduos.findOne({ _id: id, 'resultados.mes': mes });
+        const archivo = await ArchivoResiduos.findOne({  _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
 
         if (!archivo) {
             return res.status(404).send('Archivo no encontrado');
@@ -143,7 +141,7 @@ router.get('/resultadosR/:id/:mes', async (req, res) => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Resultados');
         worksheet.columns = [
-            { header: 'N Nic', key: 'nNic' },
+            { header: 'N Nit', key: 'nNit' },
             { header: 'Nombre del cliente', key: 'nombreCliente' },
             { header: 'Tipo de negocio', key: 'tipoNegocio' },
             { header: 'Lugar', key: 'lugar' },
@@ -175,14 +173,18 @@ router.get('/resultadosR/:id/:mes', async (req, res) => {
 });
 
 // Endpoint para descargar el archivo Excel histórico
-router.get('/historicoR', async (req, res) => {
+router.get('/historicoR/:nit', async (req, res) => {
     try {
-        const archivos = await ArchivoResiduos.find();
+
+        const nit = req.params.nit;
+
+        // Corregir la búsqueda para utilizar el campo resultados.nNit en lugar de cliente
+        const archivos = await ArchivoResiduos.find({ 'resultados.nNit': nit });
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Historico');
         worksheet.columns = [
-            { header: 'N Nic', key: 'nNic' },
+            { header: 'N Nit', key: 'nNit' },
             { header: 'Nombre del cliente', key: 'nombreCliente' },
             { header: 'Tipo de negocio', key: 'tipoNegocio' },
             { header: 'Lugar', key: 'lugar' },
@@ -203,7 +205,7 @@ router.get('/historicoR', async (req, res) => {
 
         archivos.forEach(archivo => {
             worksheet.addRow({
-                nNic: archivo.resultados.nNic,
+                nNit: archivo.resultados.nNit,
                 nombreCliente: archivo.resultados.nombreCliente,
                 tipoNegocio: archivo.resultados.tipoNegocio,
                 lugar: archivo.resultados.lugar,
@@ -237,12 +239,13 @@ router.get('/historicoR', async (req, res) => {
 });
 
 // Endpoint para visualizar los datos de residuos
-router.get('/resulR/:id/:mes', async (req, res) => {
+router.get('/resulR/:nit/:id/:mes', async (req, res) => {
     try {
       const id = req.params.id;
       const mes = req.params.mes;
+      const nit = req.params.nit;
   
-      const archivo = await ArchivoResiduos.findOne({ _id: id, 'resultados.mes': mes });
+      const archivo = await ArchivoResiduos.findOne({ _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
   
       if (!archivo) {
         return res.status(404).send('Archivo no encontrado');
@@ -252,7 +255,7 @@ router.get('/resulR/:id/:mes', async (req, res) => {
   
       // Construir un nuevo objeto para ordenar la respuesta
       const respuestaOrdenada = {
-        nNic: resultados.nNic,
+        nNit: resultados.nNit,
         nombreCliente: resultados.nombreCliente,
         tipoNegocio: resultados.tipoNegocio,
         lugar: resultados.lugar,
