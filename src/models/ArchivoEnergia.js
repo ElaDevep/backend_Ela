@@ -46,7 +46,7 @@ const archivoEnergiaSchema = new mongoose.Schema({
       type: Number,
       required: true
     },
-    nNic: String,
+    nNit: String,
     nombreCliente: String,
     tipoNegocio: String,
     lugar: String,
@@ -64,10 +64,7 @@ const archivoEnergiaSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserDetails'
   },
-  cliente: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'UserDetails' // Cambiar 'Cliente' por el nombre del modelo que representa a los usuarios
-  }
+  
 });
 
 // Sobreescribir el método toJSON para cambiar el formato de la fecha antes de enviarlo

@@ -26,7 +26,8 @@ const archivoSchema = new mongoose.Schema({
     nombreCliente: String,
     tipoNegocio: String,
     lugar: String,
-    mes: String
+    mes: String,
+    nNit: String 
   },
   fechaSubida: {
     type: Date,
@@ -48,7 +49,7 @@ const archivoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Empresa' // Nombre del modelo que representa a las empresas
   },
-  
+ 
 });
 
 // Sobreescribir el método toJSON para cambiar el formato de la fecha antes de enviarlo
