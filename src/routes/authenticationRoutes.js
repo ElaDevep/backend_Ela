@@ -162,7 +162,9 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
 
 // Ruta registro Ela
 router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
-    const { name, lastname, idEnterprice, email,imgProfile, role,businessName } = req.body;
+    const { name, lastname, idEnterprice, email,imgProfile, role } = req.body;
+
+
 
     try {
         // Validar si el rol proporcionado es válido
@@ -284,7 +286,7 @@ router.get('/image/:userId', checkUserRole('Admin'), async (req, res) => {
 // Ruta PUT para actualizar la información del usuario
 router.put('/update/:userId', async (req, res) => {
     const userId = req.params.userId;
-    const { name, email, mobile } = req.body;
+    const { name, email, mobile,lastname,role } = req.body;
 
     try {
         // Validar el formato del correo electrónico (si se proporciona)
@@ -315,6 +317,8 @@ router.put('/update/:userId', async (req, res) => {
         user.name = name || user.name;
         user.email = email || user.email;
         user.mobile = mobile || user.mobile;
+        user.lastname = lastname || user.lastname;
+        user.role = role || user.role;
 
         // Guardar los cambios en la base de datos
         await user.save();
