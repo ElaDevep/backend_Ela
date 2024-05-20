@@ -176,7 +176,7 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !lastname || !idEnterprice || !email || !imgProfile || !role|| !businessName) {
+        if (!name || !lastname || !idEnterprice || !email || !imgProfile || !role) {
             throw new Error("Se requieren nombre, apellido, ID de empresa, correo electrónico, contraseña, imagen de perfil y rol");
         }
 
@@ -203,12 +203,12 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
         await User.create({
             name,
             lastname,
-            idEnterprice: "ELa",
+            idEnterprice: "01",
             email,
             password: hashedPassword,
             imgProfile,
             role,
-            businessName
+            businessName:"ELA Sustentable"
         });
 
          // enviar correo 
