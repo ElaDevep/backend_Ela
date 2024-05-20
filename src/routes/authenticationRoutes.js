@@ -8,6 +8,7 @@ const checkUserRole = require("../middleware/checkUserRoleMiddleware");
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
+const Empresa = require("../models/Empresa");
 
 
 // Definir los roles válidos
@@ -86,7 +87,7 @@ router.post('/validate-token', async (req, res) => {
   //Registro clientes
 
 router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) => {
-    const { name, lastname, mobile, idEnterprice, email, imgProfile, role,businessName } = req.body;
+    const { name, lastname, mobile, idEnterprice, email, imgProfile, role} = req.body;
 
     try {
         // Validar si el rol proporcionado es válido
@@ -95,7 +96,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !lastname || !mobile || !idEnterprice || !email || !role || !businessName) {
+        if (!name || !lastname || !mobile || !idEnterprice || !email || !role ) {
             throw new Error("Se requieren nombre, apellido, móvil, ID de empresa, correo electrónico y rol");
         }
 
@@ -124,6 +125,8 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(temporaryPassword, saltRounds);
 
+        const businessName = await Empresa.findById(idEnterprice);
+
         //crear usuario en la base de datos
         await User.create({
             name,
@@ -134,7 +137,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
             password: hashedPassword,
             imgProfile,
             role: "Cliente",
-            businessName
+            businessName:businessName.razonSocial
         });
 
         // enviar correo 
