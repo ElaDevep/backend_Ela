@@ -8,6 +8,7 @@ const checkUserRole = require("../middleware/checkUserRoleMiddleware");
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
+const Empresa = require("../models/Empresa");
 
 
 // Definir los roles válidos
@@ -86,7 +87,7 @@ router.post('/validate-token', async (req, res) => {
   //Registro clientes
 
 router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) => {
-    const { name, lastname, mobile, idEnterprice, email, imgProfile, role,businessName } = req.body;
+    const { name, lastname, mobile, idEnterprice, email, imgProfile, role} = req.body;
 
     try {
         // Validar si el rol proporcionado es válido
@@ -95,7 +96,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !lastname || !mobile || !idEnterprice || !email || !role || !businessName) {
+        if (!name || !lastname || !mobile || !idEnterprice || !email || !role ) {
             throw new Error("Se requieren nombre, apellido, móvil, ID de empresa, correo electrónico y rol");
         }
 
@@ -124,6 +125,8 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(temporaryPassword, saltRounds);
 
+        const businessName = await Empresa.findById(idEnterprice);
+
         //crear usuario en la base de datos
         await User.create({
             name,
@@ -134,7 +137,7 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
             password: hashedPassword,
             imgProfile,
             role: "Cliente",
-            businessName
+            businessName:businessName.razonSocial
         });
 
         // enviar correo 
@@ -162,7 +165,9 @@ router.post('/admin/registerCliente', checkUserRole('Admin'), async (req, res) =
 
 // Ruta registro Ela
 router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
-    const { name, lastname, idEnterprice, email,imgProfile, role,businessName } = req.body;
+    const { name, lastname, idEnterprice, email,imgProfile, role } = req.body;
+
+
 
     try {
         // Validar si el rol proporcionado es válido
@@ -171,7 +176,7 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
         }
 
         // Validar que todos los campos requeridos estén presentes
-        if (!name || !lastname || !idEnterprice || !email || !imgProfile || !role|| !businessName) {
+        if (!name || !lastname || !idEnterprice || !email || !imgProfile || !role) {
             throw new Error("Se requieren nombre, apellido, ID de empresa, correo electrónico, contraseña, imagen de perfil y rol");
         }
 
@@ -198,12 +203,12 @@ router.post('/admin/registerEla', checkUserRole('Admin'), async (req, res) => {
         await User.create({
             name,
             lastname,
-            idEnterprice: "ELa",
+            idEnterprice: "01",
             email,
             password: hashedPassword,
             imgProfile,
             role,
-            businessName
+            businessName:"ELA Sustentable"
         });
 
          // enviar correo 
@@ -284,7 +289,7 @@ router.get('/image/:userId', checkUserRole('Admin'), async (req, res) => {
 // Ruta PUT para actualizar la información del usuario
 router.put('/update/:userId', async (req, res) => {
     const userId = req.params.userId;
-    const { name, email, mobile } = req.body;
+    const { name, email, mobile,lastname,role } = req.body;
 
     try {
         // Validar el formato del correo electrónico (si se proporciona)
@@ -315,6 +320,8 @@ router.put('/update/:userId', async (req, res) => {
         user.name = name || user.name;
         user.email = email || user.email;
         user.mobile = mobile || user.mobile;
+        user.lastname = lastname || user.lastname;
+        user.role = role || user.role;
 
         // Guardar los cambios en la base de datos
         await user.save();

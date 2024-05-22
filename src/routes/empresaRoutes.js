@@ -37,9 +37,11 @@ router.get('/empresas', async (req, res) => {
 // Ruta para obtener una empresa por su ID
 router.get('/empresas/:empresaId', async (req, res) => {
   const { empresaId } = req.params;
+  console.log(':v')
 
   try {
     const empresa = await Empresa.findById(empresaId);
+    console.log(empresa)
     if (!empresa) {
       return res.status(404).json({ error: 'Empresa no encontrada' });
     }
