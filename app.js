@@ -93,7 +93,6 @@ mongoose.connect(mongoUrl)
                 console.log("Usuario no encontrado");
                 return res.status(404).send({ status: "error", data: "Usuario no encontrado" });
             }
-      
             // Actualizar los campos del usuario si se proporcionan
             if (name) user.name = name;
             if (lastname) user.lastname = lastname;
@@ -103,7 +102,6 @@ mongoose.connect(mongoUrl)
             if (rol) user.rol = rol;
             if (imagen) user.imagen = imagen;
             
-                 
             // Guardar los cambios en la base de datos
             await user.save();
       
