@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer'); // Importa multer
 const ArchivoEnergia = require('../models/ArchivoEnergia');
-
+const Empresa = require('../models/Empresa');
 
 // Configura multer
 const upload = multer({ dest: '../uploads' });
@@ -158,6 +158,17 @@ const upload = multer({ dest: '../uploads' });
          
        });
        await archivo.save();
+        // Encontrar la empresa correspondiente por su NIT
+        const empresa = await Empresa.findOne({ nNit: resultados.nNit });
+        
+        if (empresa) {
+            // Actualizar la referencia al último archivo y la fecha de subida
+            empresa.ultimoDocumento = archivo._id;
+            empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
+            await empresa.save();
+        } else {
+            console.error('No se encontró una empresa con el NIT proporcionado');
+        }
        
        res.status(200).send('Archivos subidos y procesados correctamente.');
      } catch (err) {
@@ -231,71 +242,75 @@ router.get('/resultadosE/:nit/:id/:mes', async (req, res) => {
   }
 });
 
+// Endpoint para historico
 
-// Endpoint para descargar el archivo Excel histórico
 router.get('/historicoE/:nit', async (req, res) => {
   try {
     const nit = req.params.nit; // Obtener el NIT desde la URL
-    const archivos = await ArchivoEnergia.find({ 'resultados.nNit': nit});
+    const archivos = await ArchivoEnergia.find({ 'resultados.nNit': nit }).sort({ fechaSubida: 1 });
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Historico');
-    worksheet.columns = [
-      { header: 'N Nit', key: 'nNit' },
-      { header: 'Nombre del cliente', key: 'nombreCliente' },
-      { header: 'Tipo de negocio', key: 'tipoNegocio' },
-      { header: 'Lugar', key: 'lugar' },
-      { header: 'Mes', key: 'mes' },
-      { header: 'Fecha de subida', key: 'fechaSubida', type: 'date' },
-      { header: 'Nombre del archivo', key: 'nombre' },
-      { header: 'Ruta', key: 'ruta' },
-      { header: '% Variacion Consumo de Energia', key: 'variacionConsumoEnergia', type: 'number' },
-      { header: '% Variación Consumo no Asociado', key: 'variacionConsumoNoAsociado', type: 'number' },
-      { header: '% Variación Costos de Energia', key: 'variacionCostosEnergia', type: 'number' },
-      { header: '% Variación Gases de Efecto invernadero', key: 'variacionGasesInvernadero', type: 'number' },
-      { header: '% Variación Producción Energetica', key: 'variacionProduccionEnergetica', type: 'number' },
-      { header: '% Variación de Proporción Energetica', key: 'variacionProporcionEnergia', type: 'number' },
-      { header: '% Variación de Punto de medición', key: 'variacionPuntoMedicion', type: 'number' },
-      { header: '% Variación Diagnostico Energetico', key: 'variacionDiagnosticoEnergetico', type: 'number' },
-      { header: '% Variación Personal Capacitado', key: 'variacionPersonalCapacitado', type: 'number' }
-     
-    ];
+    // Crear un mapa para rastrear las filas existentes
+    const rowMap = new Map();
 
     archivos.forEach(archivo => {
-      worksheet.addRow({
-        nNit: archivo.resultados.nNit,
-        nombreCliente: archivo.resultados.nombreCliente,
-        tipoNegocio: archivo.resultados.tipoNegocio,
-        lugar: archivo.resultados.lugar,
-        mes: archivo.resultados.mes,
-        fechaSubida: archivo.fechaSubida,
-        nombre: archivo.nombre,
-        ruta: archivo.ruta,
-        variacionConsumoEnergia: archivo.resultados.variacionConsumoEnergia,
-        variacionConsumoNoAsociado: archivo.resultados.variacionConsumoNoAsociado,
-        variacionCostosEnergia: archivo.resultados.variacionCostosEnergia,
-        variacionGasesInvernadero: archivo.resultados.variacionGasesInvernadero,
-        variacionProduccionEnergetica: archivo.resultados.variacionProduccionEnergetica,
-        variacionProporcionEnergia: archivo.resultados.variacionProporcionEnergia,
-        variacionPuntoMedicion: archivo.resultados.variacionPuntoMedicion,
-        variacionDiagnosticoEnergetico: archivo.resultados.variacionDiagnosticoEnergetico,
-        variacionPersonalCapacitado: archivo.resultados.variacionPersonalCapacitado
-        
-      });
+      const { mes, nombreCliente } = archivo.resultados;
+      const key = `${mes}-${nombreCliente}`;
+      if (rowMap.has(key)) {
+        // Si existe una fila con el mismo mes y cliente, actualizarla
+        const existingRow = rowMap.get(key);
+      
+        existingRow.variacionConsumoEnergia = archivo.resultados.variacionConsumoEnergia;
+        existingRow.variacionConsumoNoAsociado = archivo.resultados.variacionConsumoNoAsociado;
+        existingRow.variacionCostosEnergia = archivo.resultados.variacionCostosEnergia;
+        existingRow.variacionGasesInvernadero = archivo.resultados.variacionGasesInvernadero;
+        existingRow.variacionProduccionEnergetica = archivo.resultados.variacionProduccionEnergetica;
+        existingRow.variacionProporcionEnergia = archivo.resultados.variacionProporcionEnergia;
+        existingRow.variacionPuntoMedicion = archivo.resultados.variacionPuntoMedicion;
+        existingRow.variacionDiagnosticoEnergetico = archivo.resultados.variacionDiagnosticoEnergetico;
+        existingRow.variacionPersonalCapacitado = archivo.resultados.variacionPersonalCapacitado;
+      } else {
+        // Si no existe una fila para este mes y cliente, agregar una nueva fila
+        rowMap.set(key, {
+          nNit: archivo.resultados.nNit,
+          nombreCliente: archivo.resultados.nombreCliente,
+          tipoNegocio: archivo.resultados.tipoNegocio,
+          lugar: archivo.resultados.lugar,
+          mes: mes,
+          variacionConsumoEnergia: archivo.resultados.variacionConsumoEnergia,
+          variacionConsumoNoAsociado: archivo.resultados.variacionConsumoNoAsociado,
+          variacionCostosEnergia: archivo.resultados.variacionCostosEnergia,
+          variacionGasesInvernadero: archivo.resultados.variacionGasesInvernadero,
+          variacionProduccionEnergetica: archivo.resultados.variacionProduccionEnergetica,
+          variacionProporcionEnergia: archivo.resultados.variacionProporcionEnergia,
+          variacionPuntoMedicion: archivo.resultados.variacionPuntoMedicion,
+          variacionDiagnosticoEnergetico: archivo.resultados.variacionDiagnosticoEnergetico,
+          variacionPersonalCapacitado: archivo.resultados.variacionPersonalCapacitado
+        });
+      }
     });
 
-    const filename = 'historico.xlsx';
+    // Eliminar registros antiguos si hay más de 12
+    while (rowMap.size > 12) {
+      const oldestKey = Array.from(rowMap.keys())[0]; // Obtener la clave del primer elemento
+      rowMap.delete(oldestKey);
+    }
 
-    const buffer = await workbook.xlsx.writeBuffer();
+    // Convertir el mapa a un arreglo de objetos
+    const historicoArray = Array.from(rowMap.values());
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-    res.send(buffer);
+    // Convertir historicoArray a JSON
+    const historicoJSONString = JSON.stringify(historicoArray);
+
+    // Envía el objeto JSON como respuesta
+    res.setHeader('Content-Type', 'application/json');
+    res.send(historicoJSONString);
   } catch (err) {
     console.error(err);
     res.status(500).send('Error al descargar el histórico.');
   }
 });
+
+
 
 // endpoint para visualizar los datos 
 router.get('/resulE/:nit/:id/:mes', async (req, res) => {

@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer'); // Importa multer
 const ArchivoResiduos = require('../models/ArchivosResiduos');
+const Empresa = require('../models/Empresa');
 
 // Configura multer
 const upload = multer({ dest: '../uploads/ExcelResiduos' });
@@ -115,6 +116,17 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
         
         });
         await archivo.save();
+         // Encontrar la empresa correspondiente por su NIT
+        const empresa = await Empresa.findOne({ nNit: resultados.nNit });
+        
+        if (empresa) {
+            // Actualizar la referencia al último archivo y la fecha de subida
+            empresa.ultimoDocumento = archivo._id;
+            empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
+            await empresa.save();
+        } else {
+            console.error('No se encontró una empresa con el NIT proporcionado');
+        }
 
         res.status(200).send('Archivos subidos y procesados correctamente.');
     } catch (err) {
@@ -172,69 +184,57 @@ router.get('/resultadosR/:nit/:id/:mes', async (req, res) => {
     }
 });
 
-// Endpoint para descargar el archivo Excel histórico
+// Endpoint para descargar el archivo Excel histórico de residuos
 router.get('/historicoR/:nit', async (req, res) => {
     try {
-
         const nit = req.params.nit;
 
         // Corregir la búsqueda para utilizar el campo resultados.nNit en lugar de cliente
         const archivos = await ArchivoResiduos.find({ 'resultados.nNit': nit });
 
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Historico');
-        worksheet.columns = [
-            { header: 'N Nit', key: 'nNit' },
-            { header: 'Nombre del cliente', key: 'nombreCliente' },
-            { header: 'Tipo de negocio', key: 'tipoNegocio' },
-            { header: 'Lugar', key: 'lugar' },
-            { header: 'Mes', key: 'mes' },
-            { header: 'Fecha de subida', key: 'fechaSubida', type: 'date' },
-            { header: 'Nombre del archivo', key: 'nombre' },
-            { header: 'Ruta', key: 'ruta' },
-            { header: '% Variacion Generación de Residuos', key: 'variacionGeneracionResiduos', type: 'number' },
-            { header: '% Variacion Reducción PGIRS', key: 'reduccionPGIRS', type: 'number' },
-            { header: '% Variacion Reducción Respels', key: 'reduccionRespel', type: 'number' },
-            { header: '% Variacion Residuos Peligrosos', key: 'variacionResiduosPeligrosos', type: 'number' },
-            { header: '% Variacion Reciclaje', key: 'variacionReciclaje', type: 'number' },
-            { header: '% Variacion Desperdicios', key: 'variacionDesperdicios', type: 'number' },
-            { header: '% Variacion Generación RAESS', key: 'variacionRAEESI', type: 'number' },
-            { header: '% Variacion Personal Capacitado', key: 'variacionPersonal', type: 'number' }
-           
-        ];
+        const rowMap = new Map();
 
         archivos.forEach(archivo => {
-            worksheet.addRow({
-                nNit: archivo.resultados.nNit,
-                nombreCliente: archivo.resultados.nombreCliente,
-                tipoNegocio: archivo.resultados.tipoNegocio,
-                lugar: archivo.resultados.lugar,
-                mes: archivo.resultados.mes,
-                fechaSubida: archivo.fechaSubida,
-                nombre: archivo.nombre,
-                ruta: archivo.ruta,
-                variacionGeneracionResiduos: archivo.resultados.variacionGeneracionResiduos,
-                reduccionPGIRS: archivo.resultados.reduccionPGIRS,
-                reduccionRespel: archivo.resultados.reduccionRespel,
-                variacionResiduosPeligrosos: archivo.resultados.variacionResiduosPeligrosos,
-                variacionReciclaje: archivo.resultados.variacionReciclaje,
-                variacionDesperdicios: archivo.resultados.variacionDesperdicios,
-                variacionRAEESI: archivo.resultados.variacionRAEESI,
-                variacionPersonal: archivo.resultados.variacionPersonal
-                
-            });
+            const { mes, nombreCliente } = archivo.resultados;
+            const key = `${mes}-${nombreCliente}`;
+            if (rowMap.has(key)) {
+                const existingRow = rowMap.get(key);
+
+                existingRow.variacionGeneracionResiduos = archivo.resultados.variacionGeneracionResiduos;
+                existingRow.reduccionPGIRS = archivo.resultados.reduccionPGIRS;
+                existingRow.reduccionRespel = archivo.resultados.reduccionRespel;
+                existingRow.variacionResiduosPeligrosos = archivo.resultados.variacionResiduosPeligrosos;
+                existingRow.variacionReciclaje = archivo.resultados.variacionReciclaje;
+                existingRow.variacionDesperdicios = archivo.resultados.variacionDesperdicios;
+                existingRow.variacionRAEESI = archivo.resultados.variacionRAEESI;
+                existingRow.variacionPersonal = archivo.resultados.variacionPersonal;
+            } else {
+                rowMap.set(key, {
+                    nNit: archivo.resultados.nNit,
+                    nombreCliente: archivo.resultados.nombreCliente,
+                    tipoNegocio: archivo.resultados.tipoNegocio,
+                    lugar: archivo.resultados.lugar,
+                    mes: mes,
+                    variacionGeneracionResiduos: archivo.resultados.variacionGeneracionResiduos,
+                    reduccionPGIRS: archivo.resultados.reduccionPGIRS,
+                    reduccionRespel: archivo.resultados.reduccionRespel,
+                    variacionResiduosPeligrosos: archivo.resultados.variacionResiduosPeligrosos,
+                    variacionReciclaje: archivo.resultados.variacionReciclaje,
+                    variacionDesperdicios: archivo.resultados.variacionDesperdicios,
+                    variacionRAEESI: archivo.resultados.variacionRAEESI,
+                    variacionPersonal: archivo.resultados.variacionPersonal
+                });
+            }
         });
 
-        const filename = 'historico_residuos.xlsx';
+        const historicoArray = Array.from(rowMap.values());
+        const historicoJSONString = JSON.stringify(historicoArray);
 
-        const buffer = await workbook.xlsx.writeBuffer();
-
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-        res.send(buffer);
+        res.setHeader('Content-Type', 'application/json');
+        res.send(historicoJSONString);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Error al descargar el histórico de archivos.');
+        res.status(500).send('Error al descargar el histórico.');
     }
 });
 
