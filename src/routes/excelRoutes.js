@@ -111,7 +111,6 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     await archivo.save();
     // Encontrar la empresa correspondiente por su NIT
   const empresa = await Empresa.findOne({ nit: req.body.nNit}); // Corregir para que coincida con el campo nNit
-
  if (empresa) {
   // Actualizar la referencia al último archivo y la fecha de subida
   empresa.ultimoDocumento = archivo._id;
