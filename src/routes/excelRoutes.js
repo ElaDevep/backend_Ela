@@ -12,10 +12,11 @@ const upload = multer({ dest: '../uploads' });
 
 // Modulo agua
 
-router.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/upload/:nit', upload.single('file'), async (req, res) => {
   try {
     console.log(req.file);
     const file = req.file;
+    const requestNit =  req.params.nit;
     
     const fileData = fs.readFileSync(file.path);
     const uploadPath = path.join(__dirname, '../uploads/excelGenereado', file.originalname);
@@ -95,6 +96,13 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       mes: resultados.mes,
       nNit:resultados.nNit
     });
+    
+    if(resultados.nNit != requestNit){
+      res.status(400).send('Nit del documento no coincide con el solicitado');
+      return
+    }
+
+
     const resultDirPath = path.join(__dirname, '../uploads/excelGenereado');
     const resultFilePath = path.join(resultDirPath, `resultados_${file.originalname}`);
     await resultWorkbook.xlsx.writeFile(resultFilePath);
