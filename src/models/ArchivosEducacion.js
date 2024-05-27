@@ -20,7 +20,8 @@ const archivoEducacionSchema = new mongoose.Schema({
     nombreCliente: String,
     tipoNegocio: String,
     lugar: String,
-    mes: String
+    mes: String,
+    sede:String
   },
   
   fechaSubida: {
@@ -34,6 +35,10 @@ const archivoEducacionSchema = new mongoose.Schema({
   usuario: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserDetails'
+  },
+  idEmpresa: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Empresa' // Referencia al modelo de Empresa
   },
 
 

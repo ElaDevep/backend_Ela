@@ -11,12 +11,11 @@ const Empresa = require('../models/Empresa');
 const upload = multer({ dest: '../uploads/ExcelResiduos' });
 
 // Modulo Residuos
-router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
+router.post('/uploadResiduos/:idEmpresa', upload.single('file'), async (req, res) => {
     try {
         console.log(req.file);
         const file = req.file;
         
-
         const fileData = fs.readFileSync(file.path);
         const uploadPath = path.join(__dirname, '../uploads/ExcelResiduos', file.originalname);
         fs.writeFileSync(uploadPath, fileData);
@@ -63,6 +62,7 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
         const tipoNegocio = worksheet.getCell('C124').value;
         const lugar = worksheet.getCell('C126').value;
         const mes = worksheet.getCell('C125').value;
+        const sede =worksheet.getCell('C127').value;
 
         // Construir el objeto de resultados
         const resultados = {
@@ -71,6 +71,7 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
             'tipoNegocio': tipoNegocio,
             'lugar': lugar,
             'mes': mes,
+            'sede': sede,
             'variacionGeneracionResiduos': variacionGeneracionResiduos,
             'reduccionPGIRS': reduccionPGIRS,
             'reduccionRespel': reduccionRespel,
@@ -91,6 +92,7 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
             { header: 'Tipo de negocio', key: 'tipoNegocio' },
             { header: 'Lugar', key: 'lugar' },
             { header: 'Mes', key: 'mes' },
+            { header: 'Sede', key: 'sede' },
             { header: '% Variacion Generación de Residuos', key: 'variacionGeneracionResiduos', type: 'number' },
             { header: '% Variacion Reducción PGIRS', key: 'reduccionPGIRS', type: 'number' },
             { header: '% Variacion Reducción Respels', key: 'reduccionRespel', type: 'number' },
@@ -113,36 +115,35 @@ router.post('/uploadResiduos', upload.single('file'), async (req, res) => {
             nombre: file.originalname,
             ruta: uploadPath,
             resultados: resultados,
+            idEmpresa: req.params.idEmpresa,
         
         });
         await archivo.save();
-         // Encontrar la empresa correspondiente por su NIT
-        const empresa = await Empresa.findOne({ nNit: resultados.nNit });
-        
-        if (empresa) {
-            // Actualizar la referencia al último archivo y la fecha de subida
-            empresa.ultimoDocumento = archivo._id;
-            empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
-            await empresa.save();
-        } else {
-            console.error('No se encontró una empresa con el NIT proporcionado');
-        }
-
-        res.status(200).send('Archivos subidos y procesados correctamente.');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error al procesar los archivos.');
+       // Encontrar la empresa correspondiente por su ID
+    const empresa = await Empresa.findById(req.params.idEmpresa);
+    if (empresa) {
+      // Actualizar la referencia al último archivo y la fecha de subida
+      empresa.ultimoDocumento = archivo._id;
+      empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
+      await empresa.save();
+    } else {
+      console.error('No se encontró una empresa con el ID proporcionado');
     }
+ 
+    res.status(200).send('Archivos subidos y procesados correctamente.');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error al procesar los archivos.');
+  }
 });
 
 // Endpoint para descargar el archivo Excel de resultados
-router.get('/resultadosR/:nit/:id/:mes', async (req, res) => {
+router.get('/resultadosR/:idEmpresa/:mes', async (req, res) => {
     try {
-        const id = req.params.id;
+        const idEmpresa = req.params.idEmpresa;
         const mes = req.params.mes;
-        const nit = req.params.nit;
 
-        const archivo = await ArchivoResiduos.findOne({  _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
+        const archivo = await ArchivoResiduos.findOne({ idEmpresa: idEmpresa, 'resultados.mes': mes });
 
         if (!archivo) {
             return res.status(404).send('Archivo no encontrado');
@@ -158,6 +159,7 @@ router.get('/resultadosR/:nit/:id/:mes', async (req, res) => {
             { header: 'Tipo de negocio', key: 'tipoNegocio' },
             { header: 'Lugar', key: 'lugar' },
             { header: 'Mes', key: 'mes' },
+            { header: 'Sede', key: 'sede' },
             { header: '% Variacion Generación de Residuos', key: 'variacionGeneracionResiduos', type: 'number' },
             { header: '% Variacion Reducción PGIRS', key: 'reduccionPGIRS', type: 'number' },
             { header: '% Variacion Reducción Respels', key: 'reduccionRespel', type: 'number' },
@@ -185,12 +187,12 @@ router.get('/resultadosR/:nit/:id/:mes', async (req, res) => {
 });
 
 // Endpoint para descargar el archivo Excel histórico de residuos
-router.get('/historicoR/:nit', async (req, res) => {
+router.get('/historicoR/:idEmpresa', async (req, res) => {
     try {
-        const nit = req.params.nit;
+        const idEmpresa = req.params.idEmpresa;
 
-        // Corregir la búsqueda para utilizar el campo resultados.nNit en lugar de cliente
-        const archivos = await ArchivoResiduos.find({ 'resultados.nNit': nit });
+        // Corregir la búsqueda para utilizar el campo resultados sede en lugar de cliente
+        const archivos = await ArchivoResiduos.find({ idEmpresa: idEmpresa }).sort({ fechaSubida: 1 });
 
         const rowMap = new Map();
 
@@ -215,6 +217,7 @@ router.get('/historicoR/:nit', async (req, res) => {
                     tipoNegocio: archivo.resultados.tipoNegocio,
                     lugar: archivo.resultados.lugar,
                     mes: mes,
+                    sede: archivo.resultados.sede,
                     variacionGeneracionResiduos: archivo.resultados.variacionGeneracionResiduos,
                     reduccionPGIRS: archivo.resultados.reduccionPGIRS,
                     reduccionRespel: archivo.resultados.reduccionRespel,
@@ -239,13 +242,12 @@ router.get('/historicoR/:nit', async (req, res) => {
 });
 
 // Endpoint para visualizar los datos de residuos
-router.get('/resulR/:nit/:id/:mes', async (req, res) => {
+router.get('/resulR/:idEmpresa/:mes', async (req, res) => {
     try {
-      const id = req.params.id;
-      const mes = req.params.mes;
-      const nit = req.params.nit;
+        const idEmpresa = req.params.idEmpresa;
+        const mes = req.params.mes;
   
-      const archivo = await ArchivoResiduos.findOne({ _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
+      const archivo = await ArchivoResiduos.findOne({ idEmpresa: idEmpresa, 'resultados.mes': mes });
   
       if (!archivo) {
         return res.status(404).send('Archivo no encontrado');
@@ -260,6 +262,7 @@ router.get('/resulR/:nit/:id/:mes', async (req, res) => {
         tipoNegocio: resultados.tipoNegocio,
         lugar: resultados.lugar,
         mes: resultados.mes,
+        sede: resultados.sede,
         variaciones: {
           variacionGeneracionResiduos: resultados.variacionGeneracionResiduos,
           reduccionPGIRS: resultados.reduccionPGIRS,

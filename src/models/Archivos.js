@@ -27,8 +27,10 @@ const archivoSchema = new mongoose.Schema({
     tipoNegocio: String,
     lugar: String,
     mes: String,
-    nNit: String 
+    nNit: String,
+    sede:String
   },
+  
   fechaSubida: {
     type: Date,
     default: Date.now
@@ -45,6 +47,10 @@ const archivoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Empresa' // Nombre del modelo que representa a las empresas
   },
+  idEmpresa: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Empresa' // Referencia al modelo de Empresa
+  },
  
 });
 
@@ -55,6 +61,7 @@ archivoSchema.set('toJSON', {
     return ret;
   }
 });
+
 
 const Archivo = mongoose.model('Archivo', archivoSchema);
 

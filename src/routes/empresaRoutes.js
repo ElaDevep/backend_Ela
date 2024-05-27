@@ -5,7 +5,7 @@ const Empresa = require('../models/Empresa');
 
 // Ruta para crear una nueva empresa
 router.post('/empresas', async (req, res) => {
-    const {nNit, razonSocial, direccion, celular, tipo } = req.body;
+    const {nNit, razonSocial, direccion, celular, tipo, sede } = req.body;
   
     try {
       // Verificar si la empresa ya existe
@@ -15,14 +15,12 @@ router.post('/empresas', async (req, res) => {
       }
   
       // Si la empresa no existe, crearla
-      await Empresa.create({ nNit, razonSocial, direccion, celular, tipo });
+      await Empresa.create({ nNit, razonSocial, direccion, celular, tipo,sede });
       res.status(201).json({ message: 'creada' });
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
   });
-  
-
 
 // Ruta para obtener todas las empresas
 router.get('/empresas', async (req, res) => {
@@ -54,12 +52,12 @@ router.get('/empresas/:empresaId', async (req, res) => {
 // Ruta para actualizar una empresa por su ID
 router.put('/empresas/:empresaId', async (req, res) => {
   const { empresaId } = req.params;
-  const { nNit, razonSocial, direccion, celular, tipo } = req.body;
+  const { nNit, razonSocial, direccion, celular, tipo,sede } = req.body;
 
   try {
     const updatedEmpresa = await Empresa.findByIdAndUpdate(
       empresaId,
-      { nNit, razonSocial, direccion, celular, tipo },
+      { nNit, razonSocial, direccion, celular, tipo, sede },
       { new: true }
     );
 
