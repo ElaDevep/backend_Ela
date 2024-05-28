@@ -38,7 +38,7 @@ router.post('/login', async (req, res) => {
 
         // Si las credenciales son correctas, puedes iniciar una sesión o generar un token de autenticación
         // Generar un token de autenticación
-        const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '7d' });
 
         // Devolver el token como respuesta
         res.send({ status: "ok", data: token });

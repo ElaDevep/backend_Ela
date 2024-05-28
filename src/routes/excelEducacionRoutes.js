@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const ArchivoEducacion = require('../models/ArchivosEducacion');
+const Empresa = require('../models/Empresa');
 
 // Configurar multer
 const upload = multer({ dest: '../uploads' });
@@ -38,7 +39,7 @@ router.post('/uploadEducacion', upload.single('file'), async (req, res) => {
        const resultWorksheet = resultWorkbook.addWorksheet('Resultados');
        resultWorksheet.columns = [
            { header: '% VariaciónPersonal', key: 'variacionPersonal', type: 'number' },
-           { header: 'N Nit', key: 'Nnit' },
+           { header: 'N Nit', key: 'nNit' },
            { header: 'Nombre del cliente', key: 'nombreCliente' },
            { header: 'Tipo de negocio', key: 'tipoNegocio' },
            { header: 'Lugar', key: 'lugar' },
@@ -57,7 +58,6 @@ router.post('/uploadEducacion', upload.single('file'), async (req, res) => {
        const resultFilePath = path.join(resultDirPath, `resultados_${file.originalname}`);
        await resultWorkbook.xlsx.writeFile(resultFilePath);
 
-
         // Crear objeto ArchivoEducacion y asignar el valor del NIT al campo nNit
         const archivo = new ArchivoEducacion({
             nombre: file.originalname,
@@ -71,9 +71,18 @@ router.post('/uploadEducacion', upload.single('file'), async (req, res) => {
                 mes: mes
             }
         });
-
         // Guardar el objeto ArchivoEducacion en la base de datos
         await archivo.save();
+         // Encontrar la empresa correspondiente por su NIT
+         const empresa = await Empresa.findOne({ nNit: nNit });
+        if (empresa) {
+            // Actualizar la referencia al último archivo y la fecha de subida
+            empresa.ultimoDocumento = archivo._id;
+            empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
+            await empresa.save();
+        } else {
+            console.error('No se encontró una empresa con el NIT proporcionado');
+        }
 
         res.status(200).send('Archivos subidos y procesados correctamente.');
     } catch (err) {
@@ -154,7 +163,7 @@ router.get('/resultadosEd/:nit/:id/:mes', async (req, res) => {
     }
 });
 
-// Endpoint para descargar el archivo Excel histórico
+// Endpoint para descargar el archivo Excel histórico de educación
 router.get('/historicoEd/:nit', async (req, res) => {
     try {
         const nit = req.params.nit;
@@ -162,46 +171,37 @@ router.get('/historicoEd/:nit', async (req, res) => {
         // Corregir la búsqueda para utilizar el campo resultados.nNit en lugar de cliente
         const archivos = await ArchivoEducacion.find({ 'resultados.nNit': nit });
 
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Historico');
-        worksheet.columns = [
-            { header: 'N Nit', key: 'nNit' },
-            { header: 'Nombre del cliente', key: 'nombreCliente' },
-            { header: 'Tipo de negocio', key: 'tipoNegocio' },
-            { header: 'Lugar', key: 'lugar' },
-            { header: 'Mes', key: 'mes' },
-            { header: 'Fecha de subida', key: 'fechaSubida', type: 'date' },
-            { header: 'Nombre del archivo', key: 'nombre' },
-            { header: 'Ruta', key: 'ruta' },
-            { header: '% Variacion Personal Capacitado', key: 'variacionPersonal', type: 'number' },
-        ];
+        const rowMap = new Map();
 
         archivos.forEach(archivo => {
-            worksheet.addRow({
-                nNit: archivo.resultados.nNit,
-                nombreCliente: archivo.resultados.nombreCliente,
-                tipoNegocio: archivo.resultados.tipoNegocio,
-                lugar: archivo.resultados.lugar,
-                mes: archivo.resultados.mes,
-                fechaSubida: archivo.fechaSubida,
-                nombre: archivo.nombre,
-                ruta: archivo.ruta,
-                variacionPersonal: archivo.resultados.variacionPersonal
-            });
+            const { mes, nombreCliente } = archivo.resultados;
+            const key = `${mes}-${nombreCliente}`;
+            if (rowMap.has(key)) {
+                const existingRow = rowMap.get(key);
+                existingRow.variacionPersonal = archivo.resultados.variacionPersonal;
+            } else {
+                rowMap.set(key, {
+                    nNit: archivo.resultados.nNit,
+                    nombreCliente: archivo.resultados.nombreCliente,
+                    tipoNegocio: archivo.resultados.tipoNegocio,
+                    lugar: archivo.resultados.lugar,
+                    mes: mes,
+                    variacionPersonal: archivo.resultados.variacionPersonal
+                });
+            }
         });
 
-        const filename = 'historico.xlsx';
+        const historicoArray = Array.from(rowMap.values());
+        const historicoJSONString = JSON.stringify(historicoArray);
 
-        const buffer = await workbook.xlsx.writeBuffer();
-
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-        res.send(buffer);
+        res.setHeader('Content-Type', 'application/json');
+        res.send(historicoJSONString);
     } catch (err) {
         console.error(err);
         res.status(500).send('Error al descargar el histórico.');
     }
 });
+
 
 module.exports = router;
 

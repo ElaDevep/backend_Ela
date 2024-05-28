@@ -33,10 +33,6 @@ const archivoSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  empresa: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Empresa'
-  },
   usuario: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserDetails'

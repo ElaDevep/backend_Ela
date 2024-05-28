@@ -64,7 +64,7 @@ const archivoEnergiaSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserDetails'
   },
-  
+   
 });
 
 // Sobreescribir el método toJSON para cambiar el formato de la fecha antes de enviarlo
