@@ -25,6 +25,10 @@ const empresaSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,  // Tipo para almacenar el ID del último documento subido
     ref: 'Archivo'  // Referencia al modelo de Archivo
   },
+  sede: {
+    type: String,  // Ahora la sede se define como una cadena de texto
+    required: true
+  },
   fechaSubida: {
     type: Date,  // Tipo para almacenar la fecha de subida
     default: Date.now  // Valor predeterminado: la fecha y hora actuales

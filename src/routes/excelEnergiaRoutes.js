@@ -13,7 +13,7 @@ const upload = multer({ dest: '../uploads' });
  
  // Modulo Energia
  
- router.post('/uploadEnergia', upload.single('file'), async (req, res) => {
+ router.post('/uploadEnergia/:idEmpresa', upload.single('file'), async (req, res) => {
      try {
        console.log(req.file);
        const file = req.file;
@@ -90,6 +90,7 @@ const upload = multer({ dest: '../uploads' });
      const tipoNegocio = worksheet.getCell('C128').value;
      const lugar = worksheet.getCell('C130').value;
      const mes = worksheet.getCell('C129').value;
+     const sede =worksheet.getCell('C131').value;
  
      const resultados = {
        nNit,
@@ -97,6 +98,7 @@ const upload = multer({ dest: '../uploads' });
        tipoNegocio,
        lugar,
        mes,
+       sede,
        variacionConsumoEnergia,
        variacionConsumoNoAsociado,
        variacionCostosEnergia,
@@ -105,7 +107,8 @@ const upload = multer({ dest: '../uploads' });
        variacionProporcionEnergia,
        variacionPuntoMedicion,
        variacionDiagnosticoEnergetico,
-       variacionPersonalCapacitado
+       variacionPersonalCapacitado,
+       
        
      };
      // Guardar los resultados en un nuevo libro de Excel
@@ -117,6 +120,7 @@ const upload = multer({ dest: '../uploads' });
        { header: 'Tipo de negocio', key: 'tipoNegocio' },
        { header: 'Lugar', key: 'lugar' },
        { header: 'Mes', key: 'mes' },
+       { header: 'Sede', key: 'sede' },
        { header: '% Variacion Consumo de Energia', key: 'variacionConsumoEnergia', type: 'number' },
        { header: '% Variación Consumo no Asociado', key: 'variacionConsumoNoAsociado', type: 'number' },
        { header: '% Variación Costos de Energia', key: 'variacionCostosEnergia', type: 'number' },
@@ -126,6 +130,7 @@ const upload = multer({ dest: '../uploads' });
        { header: '% Variación de Punto de medición', key: 'variacionPuntoMedicion', type: 'number' },
        { header: '% Variación Diagnostico Energetico', key: 'variacionDiagnosticoEnergetico', type: 'number' },
        { header: '% Variación Personal Capacitado', key: 'variacionPersonalCapacitado', type: 'number' }
+
  
      ];
      resultWorksheet.addRow({
@@ -134,6 +139,7 @@ const upload = multer({ dest: '../uploads' });
          tipoNegocio: resultados.tipoNegocio,
          lugar: resultados.lugar,
          mes: resultados.mes,
+         sede:resultados.sede,
          variacionConsumoEnergia: resultados.variacionConsumoEnergia,
          variacionConsumoNoAsociado: resultados.variacionConsumoNoAsociado,
          variacionCostosEnergia: resultados.variacionCostosEnergia,
@@ -154,38 +160,38 @@ const upload = multer({ dest: '../uploads' });
          nombre: file.originalname,
          ruta: uploadPath,
          resultados: resultados,
+         idEmpresa: req.params.idEmpresa
   
          
        });
        await archivo.save();
-        // Encontrar la empresa correspondiente por su NIT
-        const empresa = await Empresa.findOne({ nNit: resultados.nNit });
-        
-        if (empresa) {
-            // Actualizar la referencia al último archivo y la fecha de subida
-            empresa.ultimoDocumento = archivo._id;
-            empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
-            await empresa.save();
-        } else {
-            console.error('No se encontró una empresa con el NIT proporcionado');
-        }
-       
-       res.status(200).send('Archivos subidos y procesados correctamente.');
-     } catch (err) {
-       console.error(err);
-       res.status(500).send('Error al procesar los archivos.');
-     }
-   });
+       // Encontrar la empresa correspondiente por su ID
+    const empresa = await Empresa.findById(req.params.idEmpresa);
+    if (empresa) {
+      // Actualizar la referencia al último archivo y la fecha de subida
+      empresa.ultimoDocumento = archivo._id;
+      empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
+      await empresa.save();
+    } else {
+      console.error('No se encontró una empresa con el ID proporcionado');
+    }
+ 
+    res.status(200).send('Archivos subidos y procesados correctamente.');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error al procesar los archivos.');
+  }
+
+});
  
   // Endpoint para descargar el archivo Excel de resultados
-router.get('/resultadosE/:nit/:id/:mes', async (req, res) => {
+router.get('/resultadosE/:idEmpresa/:mes', async (req, res) => {
   try {
-    const id = req.params.id;
+    const idEmpresa = req.params.idEmpresa;
     const mes = req.params.mes;
-    const nit = req.params.nit;
 
     // Cambiar la búsqueda para utilizar el campo nNit en lugar de cliente
-    const archivo = await ArchivoEnergia.findOne({ _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
+    const archivo = await ArchivoEnergia.findOne({ idEmpresa: idEmpresa, 'resultados.mes': mes  });
 
     if (!archivo) {
       return res.status(404).send('Archivo no encontrado');
@@ -201,6 +207,7 @@ router.get('/resultadosE/:nit/:id/:mes', async (req, res) => {
       { header: 'Tipo de negocio', key: 'tipoNegocio' },
       { header: 'Lugar', key: 'lugar' },
       { header: 'Mes', key: 'mes' },
+      { header: 'Sede', key: 'sede' },
       { header: '% Variacion Consumo de Energia', key: 'variacionConsumoEnergia', type: 'number' },
       { header: '% Variación Consumo no Asociado', key: 'variacionConsumoNoAsociado', type: 'number' },
       { header: '% Variación Costos de Energia', key: 'variacionCostosEnergia', type: 'number' },
@@ -218,6 +225,7 @@ router.get('/resultadosE/:nit/:id/:mes', async (req, res) => {
       tipoNegocio: resultados.tipoNegocio,
       lugar: resultados.lugar,
       mes: resultados.mes,
+      sede: resultados.sede,
       variacionConsumoEnergia: resultados.variacionConsumoEnergia,
       variacionConsumoNoAsociado: resultados.variacionConsumoNoAsociado,
       variacionCostosEnergia: resultados.variacionCostosEnergia,
@@ -244,10 +252,10 @@ router.get('/resultadosE/:nit/:id/:mes', async (req, res) => {
 
 // Endpoint para historico
 
-router.get('/historicoE/:nit', async (req, res) => {
+router.get('/historicoE/:idEmpresa', async (req, res) => {
   try {
-    const nit = req.params.nit; // Obtener el NIT desde la URL
-    const archivos = await ArchivoEnergia.find({ 'resultados.nNit': nit }).sort({ fechaSubida: 1 });
+    const idEmpresa = req.params.idEmpresa;
+    const archivos = await ArchivoEnergia.find({ idEmpresa: idEmpresa }).sort({ fechaSubida: 1 });
 
     // Crear un mapa para rastrear las filas existentes
     const rowMap = new Map();
@@ -276,6 +284,7 @@ router.get('/historicoE/:nit', async (req, res) => {
           tipoNegocio: archivo.resultados.tipoNegocio,
           lugar: archivo.resultados.lugar,
           mes: mes,
+          sede: archivo.resultados.sede,
           variacionConsumoEnergia: archivo.resultados.variacionConsumoEnergia,
           variacionConsumoNoAsociado: archivo.resultados.variacionConsumoNoAsociado,
           variacionCostosEnergia: archivo.resultados.variacionCostosEnergia,
@@ -313,14 +322,13 @@ router.get('/historicoE/:nit', async (req, res) => {
 
 
 // endpoint para visualizar los datos 
-router.get('/resulE/:nit/:id/:mes', async (req, res) => {
+router.get('/resulE/:idEmpresa/:mes', async (req, res) => {
   try {
-    const id = req.params.id;
+    const idEmpresa = req.params.idEmpresa;
     const mes = req.params.mes;
-    const nit = req.params.nit;
 
      // Buscar el archivo en la base de datos
-     const archivo = await ArchivoEnergia.findOne({_id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
+     const archivo = await ArchivoEnergia.findOne({idEmpresa: idEmpresa, 'resultados.mes': mes });
 
     if (!archivo) {
       return res.status(404).send('Archivo no encontrado');
@@ -335,6 +343,7 @@ router.get('/resulE/:nit/:id/:mes', async (req, res) => {
       tipoNegocio: resultados.tipoNegocio,
       lugar: resultados.lugar,
       mes: resultados.mes,
+      sede: archivo.resultados.sede,
       variaciones: {
         variacionConsumoEnergia: resultados.variacionConsumoEnergia,
         variacionConsumoNoAsociado: resultados.variacionConsumoNoAsociado,

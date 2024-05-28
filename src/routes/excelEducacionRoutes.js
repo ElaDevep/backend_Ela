@@ -11,7 +11,7 @@ const Empresa = require('../models/Empresa');
 const upload = multer({ dest: '../uploads' });
 
 // Endpoint para subir archivos de educación
-router.post('/uploadEducacion', upload.single('file'), async (req, res) => {
+router.post('/uploadEducacion/:idEmpresa', upload.single('file'), async (req, res) => {
     try {
         console.log(req.file);
         const file = req.file;
@@ -33,6 +33,7 @@ router.post('/uploadEducacion', upload.single('file'), async (req, res) => {
         const tipoNegocio = worksheet.getCell('C17').value;
         const lugar = worksheet.getCell('C19').value;
         const mes = worksheet.getCell('C18').value;
+        const sede =worksheet.getCell('C20').value;
 
        // Guardar resultados en un nuevo libro de Excel
        const resultWorkbook = new ExcelJS.Workbook();
@@ -44,6 +45,7 @@ router.post('/uploadEducacion', upload.single('file'), async (req, res) => {
            { header: 'Tipo de negocio', key: 'tipoNegocio' },
            { header: 'Lugar', key: 'lugar' },
            { header: 'Mes', key: 'mes' },
+           { header: 'Sede', key: 'sede' },
        ];
        resultWorksheet.addRow({
            variacionPersonal: variacionPersonal,
@@ -51,7 +53,8 @@ router.post('/uploadEducacion', upload.single('file'), async (req, res) => {
            nombreCliente: nombreCliente,
            tipoNegocio: tipoNegocio,
            lugar: lugar,
-           mes: mes
+           mes: mes,
+           sede
        });
 
        const resultDirPath = path.join(__dirname, '../uploads/excelEducacion');
@@ -62,44 +65,47 @@ router.post('/uploadEducacion', upload.single('file'), async (req, res) => {
         const archivo = new ArchivoEducacion({
             nombre: file.originalname,
             ruta: uploadPath,
+            idEmpresa: req.params.idEmpresa,
             resultados: {
                 variacionPersonal: variacionPersonal,
                 nNit: nNit,
                 nombreCliente: nombreCliente,
                 tipoNegocio: tipoNegocio,
                 lugar: lugar,
-                mes: mes
+                mes: mes,
+                sede:sede,
+                
+
             }
         });
         // Guardar el objeto ArchivoEducacion en la base de datos
         await archivo.save();
-         // Encontrar la empresa correspondiente por su NIT
-         const empresa = await Empresa.findOne({ nNit: nNit });
-        if (empresa) {
-            // Actualizar la referencia al último archivo y la fecha de subida
-            empresa.ultimoDocumento = archivo._id;
-            empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
-            await empresa.save();
-        } else {
-            console.error('No se encontró una empresa con el NIT proporcionado');
-        }
-
-        res.status(200).send('Archivos subidos y procesados correctamente.');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error al procesar los archivos.');
+        // Encontrar la empresa correspondiente por su ID
+    const empresa = await Empresa.findById(req.params.idEmpresa);
+    if (empresa) {
+      // Actualizar la referencia al último archivo y la fecha de subida
+      empresa.ultimoDocumento = archivo._id;
+      empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
+      await empresa.save();
+    } else {
+      console.error('No se encontró una empresa con el ID proporcionado');
     }
+ 
+    res.status(200).send('Archivos subidos y procesados correctamente.');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error al procesar los archivos.');
+  }
 });
 
 // Endpoint para visualizar solo los resultados
-router.get('/resulEd/:nit/:id/:mes', async (req, res) => {
+router.get('/resulEd/:idEmpresa/:mes', async (req, res) => {
     try {
-        const nit = req.params.nit;
-        const id = req.params.id;
+        const idEmpresa = req.params.idEmpresa;
         const mes = req.params.mes;
 
         // Corregir la búsqueda para utilizar el campo resultados.nNit en lugar de cliente
-        const archivo = await ArchivoEducacion.findOne({ _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
+        const archivo = await ArchivoEducacion.findOne({ idEmpresa: idEmpresa, 'resultados.mes': mes});
 
         if (!archivo) {
             return res.status(404).send('Archivo no encontrado');
@@ -115,14 +121,13 @@ router.get('/resulEd/:nit/:id/:mes', async (req, res) => {
 });
 
 // Endpoint para descargar el archivo Excel de resultados
-router.get('/resultadosEd/:nit/:id/:mes', async (req, res) => {
+router.get('/resultadosEd/:idEmpresa/:mes', async (req, res) => {
     try {
-        const nit = req.params.nit;
-        const id = req.params.id;
+        const idEmpresa = req.params.idEmpresa;
         const mes = req.params.mes;
 
         // Cambiar la búsqueda para utilizar el campo nNit en lugar de cliente
-        const archivo = await ArchivoEducacion.findOne({ _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
+        const archivo = await ArchivoEducacion.findOne({ idEmpresa: idEmpresa, 'resultados.mes': mes });
 
         if (!archivo) {
             return res.status(404).json({ message: 'Archivo no encontrado' }); // Devolver respuesta JSON
@@ -139,6 +144,7 @@ router.get('/resultadosEd/:nit/:id/:mes', async (req, res) => {
             { header: 'Lugar', key: 'lugar' },
             { header: 'Mes', key: 'mes' },
             { header: '% Variacion Personal Capacitado', key: 'variacionPersonal', type: 'number' },
+            { header: 'Sede', key: 'sede' },
         ];
 
         worksheet.addRow({
@@ -147,6 +153,7 @@ router.get('/resultadosEd/:nit/:id/:mes', async (req, res) => {
             tipoNegocio: resultados.tipoNegocio,
             lugar: resultados.lugar,
             mes: resultados.mes,
+            sede: resultados.sede,
             variacionPersonal: resultados.variacionPersonal
         });
 
@@ -164,12 +171,12 @@ router.get('/resultadosEd/:nit/:id/:mes', async (req, res) => {
 });
 
 // Endpoint para descargar el archivo Excel histórico de educación
-router.get('/historicoEd/:nit', async (req, res) => {
+router.get('/historicoEd/:idEmpresa', async (req, res) => {
     try {
-        const nit = req.params.nit;
+        const idEmpresa = req.params.idEmpresa;
 
         // Corregir la búsqueda para utilizar el campo resultados.nNit en lugar de cliente
-        const archivos = await ArchivoEducacion.find({ 'resultados.nNit': nit });
+        const archivos = await ArchivoEducacion.find({ idEmpresa: idEmpresa }).sort({ fechaSubida: 1 });
 
         const rowMap = new Map();
 
@@ -186,6 +193,7 @@ router.get('/historicoEd/:nit', async (req, res) => {
                     tipoNegocio: archivo.resultados.tipoNegocio,
                     lugar: archivo.resultados.lugar,
                     mes: mes,
+                    sede: archivo.resultados.sede,
                     variacionPersonal: archivo.resultados.variacionPersonal
                 });
             }

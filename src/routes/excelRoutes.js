@@ -14,11 +14,11 @@ const upload = multer({ dest: '../uploads' });
 
 // Modulo agua
 
-router.post('/upload/:nit', upload.single('file'), async (req, res) => {
+router.post('/upload/:idEmpresa', upload.single('file'), async (req, res) => {
   try {
     console.log(req.file);
     const file = req.file;
-    const requestNit =  req.params.nit;
+    
     
     const fileData = fs.readFileSync(file.path);
     const uploadPath = path.join(__dirname, '../uploads/excelGenereado', file.originalname);
@@ -46,6 +46,7 @@ router.post('/upload/:nit', upload.single('file'), async (req, res) => {
       variacion = 0; // O cualquier otro valor predeterminado
     }
 
+  
     // Evaluar formula para el cosumo de materias primas
 
     const b13 = parseFloat(worksheet.getCell('B13').value.toString().replace(',', '.'));
@@ -59,6 +60,8 @@ router.post('/upload/:nit', upload.single('file'), async (req, res) => {
     const lugar = worksheet.getCell('B18').value;
     const mes = worksheet.getCell('B22').value;
     const nNit = worksheet.getCell('B23').value;
+    const sede =worksheet.getCell('B24').value;
+    
 
     const resultados = {
       reduccionAhorroHidrico,
@@ -69,7 +72,9 @@ router.post('/upload/:nit', upload.single('file'), async (req, res) => {
       tipoNegocio,
       lugar,
       mes,
-      nNit
+      nNit,
+      sede
+
     };
 
     // Guardar los resultados en un nuevo libro de Excel
@@ -85,6 +90,7 @@ router.post('/upload/:nit', upload.single('file'), async (req, res) => {
       { header: 'Lugar', key: 'lugar' },
       { header: 'Mes', key: 'mes' },
       { header: 'Nit', key: 'nNit' },
+      { header: 'Sede', key: 'sede' },
 
     ];
     resultWorksheet.addRow({
@@ -96,7 +102,9 @@ router.post('/upload/:nit', upload.single('file'), async (req, res) => {
       tipoNegocio: resultados.tipoNegocio,
       lugar: resultados.lugar,
       mes: resultados.mes,
-      nNit:resultados.nNit
+      nNit:resultados.nNit,
+      sede:resultados.sede
+      
     });
     
     if(resultados.nNit != requestNit){
@@ -114,19 +122,21 @@ router.post('/upload/:nit', upload.single('file'), async (req, res) => {
       nombre: file.originalname,
       ruta: uploadPath,
       resultados: resultados,
+      idEmpresa: req.params.idEmpresa
+      
       
     });
     await archivo.save();
-    // Encontrar la empresa correspondiente por su NIT
-  const empresa = await Empresa.findOne({ nit: req.body.nNit}); // Corregir para que coincida con el campo nNit
- if (empresa) {
-  // Actualizar la referencia al último archivo y la fecha de subida
-  empresa.ultimoDocumento = archivo._id;
-  empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
-  await empresa.save();
-  } else {
-  console.error('No se encontró una empresa con el NIT proporcionado');
-}
+    // Encontrar la empresa correspondiente por su ID
+    const empresa = await Empresa.findById(req.params.idEmpresa);
+    if (empresa) {
+      // Actualizar la referencia al último archivo y la fecha de subida
+      empresa.ultimoDocumento = archivo._id;
+      empresa.fechaSubida = new Date(); // O la fecha real de subida del archivo
+      await empresa.save();
+    } else {
+      console.error('No se encontró una empresa con el ID proporcionado');
+    }
  
     res.status(200).send('Archivos subidos y procesados correctamente.');
   } catch (err) {
@@ -137,14 +147,14 @@ router.post('/upload/:nit', upload.single('file'), async (req, res) => {
 });
 
 // Endpoint para descargar solo los resultados
-router.get('/resultados/:nit/:id/:mes', async (req, res) => {
+router.get('/resultados/:idEmpresa/:mes', async (req, res) => {
   try {
-    const id = req.params.id;
+    const idEmpresa = req.params.idEmpresa;
     const mes = req.params.mes;
-    const nit = req.params.nit;
-
+    
     // Buscar el archivo en la base de datos por su ID y mes
-    const archivo = await Archivo.findOne({  _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
+    const archivo = await Archivo.findOne({ idEmpresa: idEmpresa, 'resultados.mes': mes });
+
 
     if (!archivo) {
       return res.status(404).send('Archivo no encontrado');
@@ -166,6 +176,7 @@ router.get('/resultados/:nit/:id/:mes', async (req, res) => {
       { header: 'Lugar', key: 'lugar' },
       { header: 'Mes', key: 'mes' },
       { header: 'Nit', key: 'nNit' },
+      { header: 'Sede', key: 'sede' },
 
     ];
 
@@ -178,7 +189,8 @@ router.get('/resultados/:nit/:id/:mes', async (req, res) => {
       tipoNegocio: resultados.tipoNegocio,
       lugar: resultados.lugar,
       mes: resultados.mes,
-      nNit: resultados.nNit
+      nNit: resultados.nNit,
+      sede: resultados.sede,
     });
     // Generar el nombre del archivo para descargar
     const filename = `resultados_${archivo._id}_${mes}.xlsx`;
@@ -195,15 +207,16 @@ router.get('/resultados/:nit/:id/:mes', async (req, res) => {
     res.status(500).send('Error al descargar los resultados.');
   }
 });
-// Endpoint para visualizar solo los resultados
-router.get('/resul/:nit/:id/:mes', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const mes = req.params.mes;
-    const nit = req.params.nit;
 
-    // Buscar el archivo en la base de datos por su ID y mes
-    const archivo = await Archivo.findOne({ _id: id, 'resultados.mes': mes, 'resultados.nNit': nit });
+
+// Endpoint para visualizar solo los resultados
+router.get('/resul/:idEmpresa/:mes', async (req, res) => {
+  try {
+    const idEmpresa = req.params.idEmpresa;
+    const mes = req.params.mes;
+    
+   // Buscar el archivo en la base de datos por su ID y mes
+   const archivo = await Archivo.findOne({ idEmpresa: idEmpresa, 'resultados.mes': mes });
 
     if (!archivo) {
       return res.status(404).send('Archivo no encontrado');
@@ -221,10 +234,10 @@ router.get('/resul/:nit/:id/:mes', async (req, res) => {
 
 
 // Endpoint para descargar el archivo Excel histórico
-router.get('/historico/:nit', async (req, res) => {
+router.get('/historico/:idEmpresa', async (req, res) => {
   try {
-    const nit = req.params.nit; // Obtener el NIT desde la URL
-    const archivos = await Archivo.find({ 'resultados.nNit': nit }).sort({ fechaSubida: 1 });
+    const idEmpresa = req.params.idEmpresa;
+    const archivos = await Archivo.find({ idEmpresa: idEmpresa }).sort({ fechaSubida: 1 });
 
     // Crear un mapa para rastrear las filas existentes
     const rowMap = new Map();
@@ -244,6 +257,7 @@ router.get('/historico/:nit', async (req, res) => {
         existingRow.lugar = archivo.resultados.lugar;
         existingRow.mes = archivo.resultados.mes;
         existingRow.nNit = archivo.resultados.nNit;
+        existingRow.sede = archivo.resultados.sede;
       } else {
         // Si no existe una fila para este mes y cliente, agregar una nueva fila
         rowMap.set(key, {
@@ -256,6 +270,7 @@ router.get('/historico/:nit', async (req, res) => {
           lugar: archivo.resultados.lugar,
           mes: archivo.resultados.mes,
           nNit: archivo.resultados.nNit,
+          sede: archivo.resultados.sede,
         });
       }
     });
