@@ -18,6 +18,8 @@ const checkUserRole = require("./src/middleware/checkUserRoleMiddleware");
 const excelResiduosRoutes =require("./src/routes/excelResiduosRoutes");
 const excelEducacionRoutes = require("./src/routes/excelEducacionRoutes");
 const notificacionesRouter = require('./src/routes/notificacionesRoutes');
+const anunciosRoutes =require('./src/routes/anunciosRoutes');
+const comentariosRoutes = require('./src/routes/comentariosRoutes');
 empresaRoutes = require("./src/routes/empresaRoutes");
 
 
@@ -59,6 +61,8 @@ mongoose.connect(mongoUrl)
     app.use('/excelResiduos',excelResiduosRoutes);
     app.use('/excelEducacion',excelEducacionRoutes);
     app.use('/notificaciones', notificacionesRouter);
+    app.use('/anuncios', anunciosRoutes);
+    app.use('/comentarios',comentariosRoutes);
    
 
     // Ruta de carga de archivos
