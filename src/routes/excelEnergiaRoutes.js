@@ -156,6 +156,15 @@ const upload = multer({ dest: '../uploads' });
      await resultWorkbook.xlsx.writeFile(resultFilePath);
  
      // Guardar ambos archivos en la base de datos
+    const empresa = await Empresa.findById(req.params.idEmpresa);
+    
+    if(empresa.sede!=resultados.sede){
+      return res.status(402).send('La sede no coincide con la empresa seleccionada');
+    }
+
+    if(empresa.nNit!=resultados.nNit){
+      return res.status(403).send('El nit no coincide con la empresa seleccionada');
+    }
      const archivo = new ArchivoEnergia({
          nombre: file.originalname,
          ruta: uploadPath,
@@ -166,7 +175,6 @@ const upload = multer({ dest: '../uploads' });
        });
        await archivo.save();
        // Encontrar la empresa correspondiente por su ID
-    const empresa = await Empresa.findById(req.params.idEmpresa);
     if (empresa) {
       // Actualizar la referencia al último archivo y la fecha de subida
       empresa.ultimoDocumento = archivo._id;

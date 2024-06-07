@@ -105,6 +105,17 @@ router.post('/uploadResiduos/:idEmpresa', upload.single('file'), async (req, res
         ];
         resultWorksheet.addRow(resultados);
 
+       // Encontrar la empresa correspondiente por su ID
+    const empresa = await Empresa.findById(req.params.idEmpresa);
+
+    
+    if(empresa.sede!=resultados.sede){
+      return res.status(402).send('La sede no coincide con la empresa seleccionada');
+    }
+
+    if(empresa.nNit!=resultados.nNit){
+      return res.status(403).send('El nit no coincide con la empresa seleccionada');
+    }
         // Guardar el archivo de resultados en una ruta específica
         const resultDirPath = path.join(__dirname, '../uploads/ExcelResiduos');
         const resultFilePath = path.join(resultDirPath, `resultados_${file.originalname}`);
@@ -119,8 +130,7 @@ router.post('/uploadResiduos/:idEmpresa', upload.single('file'), async (req, res
         
         });
         await archivo.save();
-       // Encontrar la empresa correspondiente por su ID
-    const empresa = await Empresa.findById(req.params.idEmpresa);
+
     if (empresa) {
       // Actualizar la referencia al último archivo y la fecha de subida
       empresa.ultimoDocumento = archivo._id;

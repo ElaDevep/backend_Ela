@@ -289,7 +289,7 @@ router.get('/image/:userId', checkUserRole('Admin'), async (req, res) => {
 // Ruta PUT para actualizar la información del usuario
 router.put('/update/:userId', async (req, res) => {
     const userId = req.params.userId;
-    const { name, email, mobile,lastname,role } = req.body;
+    const { name, email, mobile,lastname,role,imgProfile } = req.body;
 
     try {
         // Validar el formato del correo electrónico (si se proporciona)
@@ -308,6 +308,7 @@ router.put('/update/:userId', async (req, res) => {
             }
         }
 
+
         // Buscar al usuario en la base de datos por su ID
         const user = await User.findById(userId);
 
@@ -322,6 +323,7 @@ router.put('/update/:userId', async (req, res) => {
         user.mobile = mobile || user.mobile;
         user.lastname = lastname || user.lastname;
         user.role = role || user.role;
+        user.imgProfile = imgProfile || user.imgProfile;
 
         // Guardar los cambios en la base de datos
         await user.save();

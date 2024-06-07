@@ -61,6 +61,15 @@ router.post('/uploadEducacion/:idEmpresa', upload.single('file'), async (req, re
        const resultFilePath = path.join(resultDirPath, `resultados_${file.originalname}`);
        await resultWorkbook.xlsx.writeFile(resultFilePath);
 
+       const empresa = await Empresa.findById(req.params.idEmpresa);
+    
+       if(empresa.sede!=sede){
+         return res.status(402).send('La sede no coincide con la empresa seleccionada');
+       }
+   
+       if(empresa.nNit!=nNit){
+         return res.status(403).send('El nit no coincide con la empresa seleccionada');
+       }
         // Crear objeto ArchivoEducacion y asignar el valor del NIT al campo nNit
         const archivo = new ArchivoEducacion({
             nombre: file.originalname,
@@ -81,7 +90,6 @@ router.post('/uploadEducacion/:idEmpresa', upload.single('file'), async (req, re
         // Guardar el objeto ArchivoEducacion en la base de datos
         await archivo.save();
         // Encontrar la empresa correspondiente por su ID
-    const empresa = await Empresa.findById(req.params.idEmpresa);
     if (empresa) {
       // Actualizar la referencia al último archivo y la fecha de subida
       empresa.ultimoDocumento = archivo._id;

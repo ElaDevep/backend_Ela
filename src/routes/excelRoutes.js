@@ -106,22 +106,30 @@ router.post('/upload/:idEmpresa', upload.single('file'), async (req, res) => {
       sede:resultados.sede
       
     });
+    
+
+
     const resultDirPath = path.join(__dirname, '../uploads/excelGenereado');
     const resultFilePath = path.join(resultDirPath, `resultados_${file.originalname}`);
     await resultWorkbook.xlsx.writeFile(resultFilePath);
+    const empresa = await Empresa.findById(req.params.idEmpresa);
 
+    if(empresa.sede!=resultados.sede){
+      return res.status(402).send('La sede no coincide con la empresa seleccionada');
+    }
+
+    if(empresa.nNit!=resultados.nNit){
+      return res.status(403).send('El nit no coincide con la empresa seleccionada');
+    }
     // Guardar ambos archivos en la base de datos
     const archivo = new Archivo({
       nombre: file.originalname,
       ruta: uploadPath,
       resultados: resultados,
       idEmpresa: req.params.idEmpresa
-      
-      
     });
     await archivo.save();
     // Encontrar la empresa correspondiente por su ID
-    const empresa = await Empresa.findById(req.params.idEmpresa);
     if (empresa) {
       // Actualizar la referencia al último archivo y la fecha de subida
       empresa.ultimoDocumento = archivo._id;
