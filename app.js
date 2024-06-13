@@ -20,6 +20,10 @@ const excelEducacionRoutes = require("./src/routes/excelEducacionRoutes");
 const notificacionesRouter = require('./src/routes/notificacionesRoutes');
 const anunciosRoutes =require('./src/routes/anunciosRoutes');
 const comentariosRoutes = require('./src/routes/comentariosRoutes');
+const chatbotRoutes = require("./src/routes/chatbotRoutes");
+const FAQRoutes = require('./src/routes/faqRoutes');
+const PQRSFRoutes = require('./src/routes/pqrsfRoutes');
+
 empresaRoutes = require("./src/routes/empresaRoutes");
 
 
@@ -30,6 +34,7 @@ const UserDetails = require('./src/models/UserDetails');
 const app = express();
 app.use(cors()); // Configuración de CORS
 app.use(express.json());
+
 
 // Conexión a MongoDB
 const mongoUrl = "mongodb+srv://adminEla:jn8LOqeW4Z1mDNpD@cluster0.rpysdem.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
@@ -63,6 +68,10 @@ mongoose.connect(mongoUrl)
     app.use('/notificaciones', notificacionesRouter);
     app.use('/anuncios', anunciosRoutes);
     app.use('/comentarios',comentariosRoutes);
+    app.use('/chatbot', chatbotRoutes);
+    app.use('/faq', FAQRoutes);
+    app.use('/pqrsf', PQRSFRoutes);
+    
    
 
     // Ruta de carga de archivos

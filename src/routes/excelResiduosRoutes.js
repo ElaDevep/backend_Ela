@@ -198,58 +198,73 @@ router.get('/resultadosR/:idEmpresa/:mes', async (req, res) => {
 
 // Endpoint para descargar el archivo Excel histórico de residuos
 router.get('/historicoR/:idEmpresa', async (req, res) => {
-    try {
-        const idEmpresa = req.params.idEmpresa;
+  try {
+      const idEmpresa = req.params.idEmpresa;
 
-        // Corregir la búsqueda para utilizar el campo resultados sede en lugar de cliente
-        const archivos = await ArchivoResiduos.find({ idEmpresa: idEmpresa }).sort({ fechaSubida: 1 });
+      // Corregir la búsqueda para utilizar el campo resultados sede en lugar de cliente
+      const archivos = await ArchivoResiduos.find({ idEmpresa: idEmpresa }).sort({ fechaSubida: 1 });
 
-        const rowMap = new Map();
+      const rowMap = new Map();
 
-        archivos.forEach(archivo => {
-            const { mes, nombreCliente } = archivo.resultados;
-            const key = `${mes}-${nombreCliente}`;
-            if (rowMap.has(key)) {
-                const existingRow = rowMap.get(key);
+      archivos.forEach(archivo => {
+          const { mes, nombreCliente } = archivo.resultados;
+          const key = `${mes}-${nombreCliente}`;
+          if (rowMap.has(key)) {
+              const existingRow = rowMap.get(key);
 
-                existingRow.variacionGeneracionResiduos = archivo.resultados.variacionGeneracionResiduos;
-                existingRow.reduccionPGIRS = archivo.resultados.reduccionPGIRS;
-                existingRow.reduccionRespel = archivo.resultados.reduccionRespel;
-                existingRow.variacionResiduosPeligrosos = archivo.resultados.variacionResiduosPeligrosos;
-                existingRow.variacionReciclaje = archivo.resultados.variacionReciclaje;
-                existingRow.variacionDesperdicios = archivo.resultados.variacionDesperdicios;
-                existingRow.variacionRAEESI = archivo.resultados.variacionRAEESI;
-                existingRow.variacionPersonal = archivo.resultados.variacionPersonal;
-            } else {
-                rowMap.set(key, {
-                    nNit: archivo.resultados.nNit,
-                    nombreCliente: archivo.resultados.nombreCliente,
-                    tipoNegocio: archivo.resultados.tipoNegocio,
-                    lugar: archivo.resultados.lugar,
-                    mes: mes,
-                    sede: archivo.resultados.sede,
-                    variacionGeneracionResiduos: archivo.resultados.variacionGeneracionResiduos,
-                    reduccionPGIRS: archivo.resultados.reduccionPGIRS,
-                    reduccionRespel: archivo.resultados.reduccionRespel,
-                    variacionResiduosPeligrosos: archivo.resultados.variacionResiduosPeligrosos,
-                    variacionReciclaje: archivo.resultados.variacionReciclaje,
-                    variacionDesperdicios: archivo.resultados.variacionDesperdicios,
-                    variacionRAEESI: archivo.resultados.variacionRAEESI,
-                    variacionPersonal: archivo.resultados.variacionPersonal
-                });
-            }
-        });
+              existingRow.variacionGeneracionResiduos = archivo.resultados.variacionGeneracionResiduos;
+              existingRow.reduccionPGIRS = archivo.resultados.reduccionPGIRS;
+              existingRow.reduccionRespel = archivo.resultados.reduccionRespel;
+              existingRow.variacionResiduosPeligrosos = archivo.resultados.variacionResiduosPeligrosos;
+              existingRow.variacionReciclaje = archivo.resultados.variacionReciclaje;
+              existingRow.variacionDesperdicios = archivo.resultados.variacionDesperdicios;
+              existingRow.variacionRAEESI = archivo.resultados.variacionRAEESI;
+              existingRow.variacionPersonal = archivo.resultados.variacionPersonal;
+          } else {
+              rowMap.set(key, {
+                  nNit: archivo.resultados.nNit,
+                  nombreCliente: archivo.resultados.nombreCliente,
+                  tipoNegocio: archivo.resultados.tipoNegocio,
+                  lugar: archivo.resultados.lugar,
+                  mes: mes,
+                  sede: archivo.resultados.sede,
+                  variacionGeneracionResiduos: archivo.resultados.variacionGeneracionResiduos,
+                  reduccionPGIRS: archivo.resultados.reduccionPGIRS,
+                  reduccionRespel: archivo.resultados.reduccionRespel,
+                  variacionResiduosPeligrosos: archivo.resultados.variacionResiduosPeligrosos,
+                  variacionReciclaje: archivo.resultados.variacionReciclaje,
+                  variacionDesperdicios: archivo.resultados.variacionDesperdicios,
+                  variacionRAEESI: archivo.resultados.variacionRAEESI,
+                  variacionPersonal: archivo.resultados.variacionPersonal
+              });
+          }
+      });
 
-        const historicoArray = Array.from(rowMap.values());
-        const historicoJSONString = JSON.stringify(historicoArray);
+      const historicoArray = Array.from(rowMap.values());
 
-        res.setHeader('Content-Type', 'application/json');
-        res.send(historicoJSONString);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error al descargar el histórico.');
-    }
+      // Definir el orden de los meses
+      const ordenMeses = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      ];
+
+      // Ordenar el arreglo por el campo 'mes'
+      historicoArray.sort((a, b) => {
+        const indiceMesA = ordenMeses.indexOf(a.mes);
+        const indiceMesB = ordenMeses.indexOf(b.mes);
+        return indiceMesA - indiceMesB;
+      });
+
+      const historicoJSONString = JSON.stringify(historicoArray);
+
+      res.setHeader('Content-Type', 'application/json');
+      res.send(historicoJSONString);
+  } catch (err) {
+      console.error(err);
+      res.status(500).send('Error al descargar el histórico.');
+  }
 });
+
 
 // Endpoint para visualizar los datos de residuos
 router.get('/resulR/:idEmpresa/:mes', async (req, res) => {
