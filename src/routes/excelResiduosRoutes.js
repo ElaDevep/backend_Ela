@@ -228,14 +228,14 @@ router.get('/historicoR/:idEmpresa', async (req, res) => {
                     lugar: archivo.resultados.lugar,
                     mes: mes,
                     sede: archivo.resultados.sede,
-                    variacionGeneracionResiduos: archivo.resultados.variacionGeneracionResiduos,
-                    reduccionPGIRS: archivo.resultados.reduccionPGIRS,
-                    reduccionRespel: archivo.resultados.reduccionRespel,
-                    variacionResiduosPeligrosos: archivo.resultados.variacionResiduosPeligrosos,
-                    variacionReciclaje: archivo.resultados.variacionReciclaje,
-                    variacionDesperdicios: archivo.resultados.variacionDesperdicios,
-                    variacionRAEESI: archivo.resultados.variacionRAEESI,
-                    variacionPersonal: archivo.resultados.variacionPersonal
+                    variacionGeneracionResiduos: archivo.resultados.variacionGeneracionResiduos.toFixed(1),
+                    reduccionPGIRS: archivo.resultados.reduccionPGIRS.toFixed(1),
+                    reduccionRespel: archivo.resultados.reduccionRespel.toFixed(1),
+                    variacionResiduosPeligrosos: archivo.resultados.variacionResiduosPeligrosos.toFixed(1),
+                    variacionReciclaje: archivo.resultados.variacionReciclaje.toFixed(1),
+                    variacionDesperdicios: archivo.resultados.variacionDesperdicios.toFixed(1),
+                    variacionRAEESI: archivo.resultados.variacionRAEESI.toFixed(1),
+                    variacionPersonal: archivo.resultados.variacionPersonal.toFixed(1)
                 });
             }
         });

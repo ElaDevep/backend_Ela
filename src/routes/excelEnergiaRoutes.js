@@ -293,15 +293,15 @@ router.get('/historicoE/:idEmpresa', async (req, res) => {
           lugar: archivo.resultados.lugar,
           mes: mes,
           sede: archivo.resultados.sede,
-          variacionConsumoEnergia: archivo.resultados.variacionConsumoEnergia,
-          variacionConsumoNoAsociado: archivo.resultados.variacionConsumoNoAsociado,
-          variacionCostosEnergia: archivo.resultados.variacionCostosEnergia,
-          variacionGasesInvernadero: archivo.resultados.variacionGasesInvernadero,
-          variacionProduccionEnergetica: archivo.resultados.variacionProduccionEnergetica,
-          variacionProporcionEnergia: archivo.resultados.variacionProporcionEnergia,
-          variacionPuntoMedicion: archivo.resultados.variacionPuntoMedicion,
-          variacionDiagnosticoEnergetico: archivo.resultados.variacionDiagnosticoEnergetico,
-          variacionPersonalCapacitado: archivo.resultados.variacionPersonalCapacitado
+          variacionConsumoEnergia: archivo.resultados.variacionConsumoEnergia.toFixed(1),
+          variacionConsumoNoAsociado: archivo.resultados.variacionConsumoNoAsociado.toFixed(1),
+          variacionCostosEnergia: archivo.resultados.variacionCostosEnergia.toFixed(1),
+          variacionGasesInvernadero: archivo.resultados.variacionGasesInvernadero.toFixed(1),
+          variacionProduccionEnergetica: archivo.resultados.variacionProduccionEnergetica.toFixed(1),
+          variacionProporcionEnergia: archivo.resultados.variacionProporcionEnergia.toFixed(1),
+          variacionPuntoMedicion: archivo.resultados.variacionPuntoMedicion.toFixed(1),
+          variacionDiagnosticoEnergetico: archivo.resultados.variacionDiagnosticoEnergetico.toFixed(1),
+          variacionPersonalCapacitado: archivo.resultados.variacionPersonalCapacitado.toFixed(1)
         });
       }
     });
