@@ -1,10 +1,11 @@
 
-// models/Notification.js
+// notificaciones
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-   empresa: {
-        type: String,
+    empresa: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Empresa', 
         required: true
     },
     titulo: {
@@ -18,6 +19,10 @@ const notificationSchema = new mongoose.Schema({
     estado: {
         type: String,
         required: true
+    },
+    fecha: {
+        type: Date,
+        default: Date.now
     }
 });
 

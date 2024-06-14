@@ -181,42 +181,60 @@ router.get('/resultadosEd/:idEmpresa/:mes', async (req, res) => {
 // Endpoint para descargar el archivo Excel histórico de educación
 router.get('/historicoEd/:idEmpresa', async (req, res) => {
     try {
-        const idEmpresa = req.params.idEmpresa;
-
-        // Corregir la búsqueda para utilizar el campo resultados.nNit en lugar de cliente
-        const archivos = await ArchivoEducacion.find({ idEmpresa: idEmpresa }).sort({ fechaSubida: 1 });
-
-        const rowMap = new Map();
-
-        archivos.forEach(archivo => {
-            const { mes, nombreCliente } = archivo.resultados;
-            const key = `${mes}-${nombreCliente}`;
-            if (rowMap.has(key)) {
-                const existingRow = rowMap.get(key);
-                existingRow.variacionPersonal = archivo.resultados.variacionPersonal.toFixed(1);
-            } else {
-                rowMap.set(key, {
-                    nNit: archivo.resultados.nNit,
-                    nombreCliente: archivo.resultados.nombreCliente,
-                    tipoNegocio: archivo.resultados.tipoNegocio,
-                    lugar: archivo.resultados.lugar,
-                    mes: mes,
-                    sede: archivo.resultados.sede,
-                    variacionPersonal: archivo.resultados.variacionPersonal.toFixed(1)
-                });
-            }
-        });
-
-        const historicoArray = Array.from(rowMap.values());
-        const historicoJSONString = JSON.stringify(historicoArray);
-
-        res.setHeader('Content-Type', 'application/json');
-        res.send(historicoJSONString);
+      const idEmpresa = req.params.idEmpresa;
+  
+      // Corregir la búsqueda para utilizar el campo resultados.nNit en lugar de cliente
+      const archivos = await ArchivoEducacion.find({ idEmpresa: idEmpresa }).sort({ fechaSubida: 1 });
+  
+      const rowMap = new Map();
+  
+      archivos.forEach(archivo => {
+        const { mes, nombreCliente } = archivo.resultados;
+        const key = `${mes}-${nombreCliente}`;
+        if (rowMap.has(key)) {
+          const existingRow = rowMap.get(key);
+          existingRow.variacionPersonal = archivo.resultados.variacionPersonal;
+        } else {
+          rowMap.set(key, {
+            nNit: archivo.resultados.nNit,
+            nombreCliente: archivo.resultados.nombreCliente,
+            tipoNegocio: archivo.resultados.tipoNegocio,
+            lugar: archivo.resultados.lugar,
+            mes: mes,
+            sede: archivo.resultados.sede,
+            variacionPersonal: archivo.resultados.variacionPersonal.toFixed(1)
+          });
+        }
+      });
+  
+      // Convertir el mapa a un arreglo de objetos
+      const historicoArray = Array.from(rowMap.values());
+  
+      // Definir el orden de los meses
+      const ordenMeses = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      ];
+  
+      // Ordenar el arreglo por el campo 'mes'
+      historicoArray.sort((a, b) => {
+        const indiceMesA = ordenMeses.indexOf(a.mes);
+        const indiceMesB = ordenMeses.indexOf(b.mes);
+        return indiceMesA - indiceMesB;
+      });
+  
+      // Convertir historicoArray a JSON
+      const historicoJSONString = JSON.stringify(historicoArray);
+  
+      // Envía el objeto JSON como respuesta
+      res.setHeader('Content-Type', 'application/json');
+      res.send(historicoJSONString);
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error al descargar el histórico.');
+      console.error(err);
+      res.status(500).send('Error al descargar el histórico.');
     }
-});
+  });
+  
 
 
 module.exports = router;

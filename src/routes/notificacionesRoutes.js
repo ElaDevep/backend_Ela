@@ -1,24 +1,34 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/notificaciones');
+const Empresa = require('../models/Empresa');
+
 
 // Ruta para enviar una nueva notificación (POST)
 router.post('/', async (req, res) => {
     try {
         // Extraer los campos del cuerpo de la solicitud
-        const { empresa, titulo, mensaje, estado } = req.body;
+        const { empresaId, titulo, mensaje, estado } = req.body;
+
+        // Verificar que la empresa existe
+        console.log('Empresa ID recibido:', empresaId); // Añade un log para el ID de la empresa
+        const empresa = await Empresa.findById(empresaId);
+        if (!empresa) {
+            console.error('Empresa no encontrada para el ID:', empresaId);
+            return res.status(404).json({ error: 'Empresa no encontrada' });
+        }
 
         // Crear una nueva instancia de los campos
-        const newNotification = new Notification({ empresa, titulo, mensaje, estado });
+        const newNotification = new Notification({ empresa: empresaId, titulo, mensaje, estado });
 
         // Guardar la nueva notificación
         await newNotification.save();
 
-        // Responder 
+        // Responder
         res.status(201).json(newNotification);
     } catch (error) {
         // Manejar errores y enviar una respuesta de error al cliente
-        console.error(error);
+        console.error('Error al crear la notificación:', error);
         res.status(500).json({ error: 'Error al crear la notificación' });
     }
 });
@@ -26,8 +36,8 @@ router.post('/', async (req, res) => {
 // Ruta para obtener todas las notificaciones (GET)
 router.get('/', async (req, res) => {
     try {
-        // Buscar todas las notificaciones en la base de datos
-        const notifications = await Notification.find();
+        // Buscar todas las notificaciones en la base de datos y ordenarlas cronológicamente por la fecha
+        const notifications = await Notification.find().sort({ fecha: -1 }); 
 
         // Responder con la lista de notificaciones encontradas
         res.json(notifications);
@@ -38,10 +48,11 @@ router.get('/', async (req, res) => {
     }
 });
 
+
 // Ruta para obtener una notificación por su ID (GET)
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
-    
+
     try {
         // Buscar la notificación por su ID en la base de datos
         const notification = await Notification.findById(id);
@@ -100,3 +111,4 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
+

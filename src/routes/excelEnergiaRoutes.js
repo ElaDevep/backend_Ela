@@ -259,7 +259,6 @@ router.get('/resultadosE/:idEmpresa/:mes', async (req, res) => {
 });
 
 // Endpoint para historico
-
 router.get('/historicoE/:idEmpresa', async (req, res) => {
   try {
     const idEmpresa = req.params.idEmpresa;
@@ -315,6 +314,19 @@ router.get('/historicoE/:idEmpresa', async (req, res) => {
     // Convertir el mapa a un arreglo de objetos
     const historicoArray = Array.from(rowMap.values());
 
+    // Definir el orden de los meses
+    const ordenMeses = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+
+    // Ordenar el arreglo por el campo 'mes'
+    historicoArray.sort((a, b) => {
+      const indiceMesA = ordenMeses.indexOf(a.mes);
+      const indiceMesB = ordenMeses.indexOf(b.mes);
+      return indiceMesA - indiceMesB;
+    });
+
     // Convertir historicoArray a JSON
     const historicoJSONString = JSON.stringify(historicoArray);
 
@@ -326,6 +338,7 @@ router.get('/historicoE/:idEmpresa', async (req, res) => {
     res.status(500).send('Error al descargar el histórico.');
   }
 });
+
 
 
 
