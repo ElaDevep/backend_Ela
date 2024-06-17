@@ -48,6 +48,26 @@ router.get('/', async (req, res) => {
     }
 });
 
+  //rta  notificaciones por el ID de la empresa (GET)
+router.get('/noti/:empresaId', async (req, res) => {
+    const { empresaId } = req.params;
+
+    try {
+        // Buscar notificaciones por el ID de la empresa en la base de datos
+        const notifications = await Notification.find({ empresa: empresaId }).sort({ fecha: -1 });
+        if (!notifications.length) {
+            return res.status(404).json({ error: 'No se encontraron notificaciones para esta empresa' });
+        }
+
+        // Responder con las notificaciones encontradas
+        res.json(notifications);
+    } catch (error) {
+        // Manejar errores y enviar una respuesta de error al cliente
+        console.error(error);
+        res.status(500).json({ error: 'Error al obtener las notificaciones' });
+    }
+});
+
 
 // Ruta para obtener una notificación por su ID (GET)
 router.get('/:id', async (req, res) => {
