@@ -57,7 +57,7 @@ router.get('/noti/:empresaId', async (req, res) => {
         const notifications = await Notification.find({ empresa: empresaId }).sort({ fecha: -1 });
         if (!notifications.length) {
             return res.status(404).json({ error: 'No se encontraron notificaciones para esta empresa' });
-        }
+        }   
 
         // Responder con las notificaciones encontradas
         res.json(notifications);

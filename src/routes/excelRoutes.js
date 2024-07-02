@@ -6,6 +6,9 @@ const path = require('path');
 const multer = require('multer'); // Importa multer
 const Archivo = require('../models/Archivos');
 const Empresa = require('../models/Empresa');
+const axios = require('axios');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
+
 
 
 // Configura multer
@@ -282,10 +285,10 @@ router.get('/historico/:idEmpresa', async (req, res) => {
       rowMap.delete(oldestKey);
     }
 
-    // Convertir el mapa a un arreglo de objetos
+    // Arreglo
     const historicoArray = Array.from(rowMap.values());
 
-    // Definir el orden de los meses
+    // Orden de los meses 
     const ordenMeses = [
       "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
       "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -310,7 +313,61 @@ router.get('/historico/:idEmpresa', async (req, res) => {
   }
 });
 
+// Ruta para obtener el PDF basado en la plantilla y el ID de la empresa
+router.get('/pdf-template/:empresaId', async (req, res) => {
+  try {
+    const { empresaId } = req.params;
 
+    // Verificar si el empresaId existe en la colección empresa
+    const empresa = await Empresa.findById(empresaId);
+    if (!empresa) {
+      return res.status(404).send('La empresa no se encuentra');
+    }
 
+    // Cargar el PDF de la plantilla desde el sistema de archivos
+    const pdfPath = path.join(__dirname, '../uploads/templates', 'myFile-1719608799587-486266606.pdf');
+    const existingPdfBytes = fs.readFileSync(pdfPath);
+
+    // Cargar el PDF con la librería pdf-lib
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+    // Fuentes
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    // Modificar el PDF
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+
+    // Texto en la esquina inferior izquierda: Nombre de la empresa
+    firstPage.drawText(`${empresa.razonSocial}`, {
+      x: 20,
+      y: 86,
+      size: 21,
+      font: helveticaFont,
+      color: rgb(1, 1, 1),
+    });
+
+    // Texto en la esquina inferior derecha: Dirección
+    firstPage.drawText(`${empresa.direccion}`, {
+      x: 20,
+      y: 50,
+      size: 15,
+      font: helveticaFont,
+      color: rgb(200 / 255, 200 / 255, 200 / 255),
+
+    });
+
+    // Serializar el PDF 
+    const pdfBytes = await pdfDoc.save();
+
+    // Responder con el archivo PDF modificado
+    res.setHeader('Content-Disposition', 'inline; filename=template.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(Buffer.from(pdfBytes));
+  } catch (error) {
+    console.error('Error al obtener el PDF:', error);
+    res.status(500).send('Error al obtener el PDF');
+  }
+});
 
 module.exports = router;

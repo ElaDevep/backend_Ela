@@ -6,6 +6,8 @@ const path = require('path');
 const multer = require('multer'); // Importa multer
 const ArchivoEnergia = require('../models/ArchivoEnergia');
 const Empresa = require('../models/Empresa');
+const axios = require('axios');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 
 // Configura multer
 const upload = multer({ dest: '../uploads' });
@@ -382,6 +384,64 @@ router.get('/resulE/:idEmpresa/:mes', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send('Error al obtener los resultados.');
+  }
+});
+
+// Ruta para devolver la plantilla en PDF desde un enlace externo
+router.get('/pdf-templateE/:empresaId', async (req, res) => {
+  try {
+    const { empresaId } = req.params;
+
+    // Verificar si el empresaId existe en la colección empresa
+    const empresa = await Empresa.findById(empresaId);
+    if (!empresa) {
+      return res.status(404).send('La empresa no se encuentra');
+    }
+
+    // Cargar el PDF desde el sistema de archivos
+    const pdfPath = path.join(__dirname, '../uploads/templates', 'myFile-1719881986729-937572352.pdf');
+    const existingPdfBytes = fs.readFileSync(pdfPath);
+
+    // Cargar el PDF con la librería pdf-lib
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+    // Fuentes
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    // Modificar el PDF
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+
+    // Texto en la esquina inferior izquierda: Nombre de la empresa
+    firstPage.drawText(`${empresa.razonSocial}`, {
+      x: 20,
+      y: 160,
+      size: 21,
+      font: helveticaFont,
+      color: rgb(1, 1, 1),
+    });
+
+    // Texto en la esquina inferior derecha: Dirección
+    firstPage.drawText(`${empresa.direccion}`, {
+      x: 20,
+      y: 140,
+      size: 15,
+      font: helveticaFont,
+      color: rgb(200 / 255, 200 / 255, 200 / 255),
+    });
+
+    // Serializar el PDF modificado
+    const modifiedPdfBytes = await pdfDoc.save();
+
+    // Respuesta del encabezado
+    res.setHeader('Content-Disposition', 'inline; filename=template.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+
+    // Enviar el contenido del PDF modificado como un Buffer
+    res.send(Buffer.from(modifiedPdfBytes));
+  } catch (error) {
+    console.error('Error al obtener el PDF:', error);
+    res.status(500).send('Error al obtener el PDF');
   }
 });
 

@@ -23,7 +23,8 @@ const comentariosRoutes = require('./src/routes/comentariosRoutes');
 const chatbotRoutes = require("./src/routes/chatbotRoutes");
 const FAQRoutes = require('./src/routes/faqRoutes');
 const PQRSFRoutes = require('./src/routes/pqrsfRoutes');
-
+const uploadTemRoutes = require("./src/routes/uploadsTemRoutes");
+const { PDFDocument, rgb } = require("pdf-lib");
 empresaRoutes = require("./src/routes/empresaRoutes");
 
 
@@ -71,6 +72,7 @@ mongoose.connect(mongoUrl)
     app.use('/chatbot', chatbotRoutes);
     app.use('/faq', FAQRoutes);
     app.use('/pqrsf', PQRSFRoutes);
+    app.use("/uploadTem", uploadTemRoutes); 
     
    
 
