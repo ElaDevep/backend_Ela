@@ -47,6 +47,11 @@ fechaCreacion: {
   imgFrontpage: {
     type: String,
     required: false
+  },
+
+  resumen:{
+    type: String,
+    required: true
   }
 });
 
