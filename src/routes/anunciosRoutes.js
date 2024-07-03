@@ -13,7 +13,7 @@ const Empresa = require('../models/Empresa');
 // Ruta para crear un nuevo blog (dentro de la colección de anuncios)
 router.post('/blog', async (req, res) => {
   try {
-    const { title, contenido, idAutor, fechaCreacion, idEnterprise, tipo, calificacion, nCalificacion, imgFrontpage } = req.body;
+    const { title, contenido, idAutor, fechaCreacion, idEnterprise, tipo, calificacion, nCalificacion, imgFrontpage, resumen } = req.body;
 
     // Crear el nuevo blog con los campos proporcionados
     const newBlog = new Anuncio({ 
@@ -27,7 +27,8 @@ router.post('/blog', async (req, res) => {
       revision: false, 
       calificacion, 
       nCalificacion, 
-      imgFrontpage 
+      imgFrontpage,
+      resumen
     });
 
     // Guardar el blog en la base de datos (en la colección de anuncios)
@@ -44,7 +45,7 @@ router.post('/blog', async (req, res) => {
 // Ruta para crear un nuevo anuncio
 router.post('/advert', async (req, res) => {
   try {
-    const { title, contenido, idAutor, fechaCreacion, idEnterprise, tipo, calificacion, nCalificacion, imgFrontpage } = req.body;
+    const { title, contenido, idAutor, fechaCreacion, idEnterprise, tipo, calificacion, nCalificacion, imgFrontpage,resumen } = req.body;
 
     // Crear el nuevo anuncio con los campos proporcionados
     const newAnuncio = new Anuncio({ 
@@ -58,7 +59,8 @@ router.post('/advert', async (req, res) => {
       revision: true, 
       calificacion, 
       nCalificacion, 
-      imgFrontpage 
+      imgFrontpage,
+      resumen
     });
 
     // Guardar el anuncio en la base de datos
@@ -192,8 +194,6 @@ router.get('/ads_blogs', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Error al obtener los anuncios/blogs y sus detalles' });
   }
 });
-
-
 
 
 // Ruta para actualizar 
