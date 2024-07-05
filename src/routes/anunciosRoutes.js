@@ -166,12 +166,20 @@ router.get('/ads_blogs', async (req, res) => {
       // Obtener el ID de la empresa asociada al anuncio/blog
       const enterpriseId = adsBlog.idEnterprise;
 
-      // Buscar la empresa en la colección Empresa 
-      const empresa = await Empresa.findById(enterpriseId);
+      // Establecer razonSocial basado en idEnterprise
+      let razonSocial = '';
 
-      // Si no se encuentra la empresa, puedes manejarlo según tus requisitos
-      if (!empresa) {
-        continue;  
+      if (enterpriseId === '01') {
+        razonSocial = 'Ela Sustentable';
+      } else {
+        // Buscar la empresa en la colección Empresa 
+        const empresa = await Empresa.findById(enterpriseId);
+
+        // Si no se encuentra la empresa, puedes manejarlo según tus requisitos
+        if (!empresa) {
+          continue;  
+        }
+        razonSocial = empresa.razonSocial;
       }
 
       // Combinar los detalles 
@@ -180,7 +188,7 @@ router.get('/ads_blogs', async (req, res) => {
         name: userDetails.name,
         lastname: userDetails.lastname,
         imgProfile: userDetails.imgProfile,
-        razonSocial: empresa.razonSocial
+        razonSocial: razonSocial
       };
 
       // Agregar los datos combinados al array
@@ -194,6 +202,7 @@ router.get('/ads_blogs', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Error al obtener los anuncios/blogs y sus detalles' });
   }
 });
+
 
 
 // Ruta para actualizar 

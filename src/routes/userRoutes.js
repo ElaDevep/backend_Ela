@@ -21,3 +21,4 @@ router.put('/profile/edit', checkUserRole('Visualizador'), (req, res) => {
 
 
 module.exports = router;
+
