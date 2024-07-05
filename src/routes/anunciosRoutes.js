@@ -95,20 +95,27 @@ router.get('/ads_blogs/:adId', async (req, res) => {
 
     // Si no se encuentra el usuario, puedes manejarlo según tus requisitos
     if (!userDetails) {
-      // Puedes decidir si quieres responder con un error o simplemente dejar los detalles del usuario como nulos
       return res.status(404).json({ status: 'error', message: 'Detalles del usuario no encontrados' });
     }
 
     // Obtener el ID de la empresa asociada al anuncio/blog
     const enterpriseId = adsBlog.idEnterprise;
 
-    // Buscar la empresa en la colección Empresa utilizando el ID de la empresa en el anuncio/blog
-    const empresa = await Empresa.findById(enterpriseId);
+    // Establecer razonSocial basado en idEnterprise
+    let razonSocial = '';
 
-    // Si no se encuentra la empresa, puedes manejarlo según tus requisitos
-    if (!empresa) {
-      // Puedes decidir si quieres responder con un error o simplemente dejar los detalles de la empresa como nulos
-      return res.status(404).json({ status: 'error', message: 'Empresa no encontrada' });
+    if (enterpriseId === '01') {
+      razonSocial = 'Ela Sustentable';
+    } else {
+      // Buscar la empresa en la colección Empresa utilizando el ID de la empresa en el anuncio/blog
+      const empresa = await Empresa.findById(enterpriseId);
+
+      // Si no se encuentra la empresa, puedes manejarlo según tus requisitos
+      if (!empresa) {
+        return res.status(404).json({ status: 'error', message: 'Empresa no encontrada' });
+      }
+
+      razonSocial = empresa.razonSocial;
     }
 
     // Combinar los detalles del usuario, el anuncio/blog y la razón social de la empresa
@@ -117,7 +124,7 @@ router.get('/ads_blogs/:adId', async (req, res) => {
       name: userDetails.name,
       lastname: userDetails.lastname,
       imgProfile: userDetails.imgProfile,
-      razonSocial: empresa.razonSocial
+      razonSocial: razonSocial
     };
 
     // Responder con el anuncio/blog, los detalles del usuario y la razón social de la empresa
