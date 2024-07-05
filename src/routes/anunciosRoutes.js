@@ -23,7 +23,7 @@ router.post('/blog', async (req, res) => {
       fechaCreacion, 
       idEnterprise, 
       tipo, 
-      aprobado: true, 
+      aprobado: false, 
       revision: false, 
       calificacion, 
       nCalificacion, 
@@ -234,6 +234,35 @@ router.patch('/review/:id', async (req, res) => {
     console.error(error);
     res.status(500).json({ status: 'error', message: 'Error al actualizar el anuncio' });
   }
+});
+
+// Ruta  anuncios/blogs aprobados
+router.get('/approved_ads_blogs', async (req, res) => {
+  try {
+    // Buscar todos los anuncios/blogs con aprobado: true en la base de datos
+    const approvedAdsBlogs = await Anuncio.find({ aprobado: true });
+
+    // Responder con la lista de anuncios/blogs aprobados
+    res.status(200).json({ status: 'success', data: approvedAdsBlogs });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 'error', message: 'Error al obtener los anuncios/blogs aprobados' });
+  }
+});
+
+// rta anuncios/blogs no aprobados
+router.get('/unapproved_ads_blogs', async (req, res) => {
+
+  try{
+   // buscar los no aprobados 
+   const unapprovedAdsBlogs = await Anuncio.find({ aprobado: false });
+   // responder con la lista de anuncios/blogs no aprobados
+   res.status(200).json({ status: 'success', data: unapprovedAdsBlogs});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 'error', message: 'Error al obtener los anuncios/blogs no aprobados' });
+  }
+
 });
 
 module.exports = router;
