@@ -243,34 +243,120 @@ router.patch('/review/:id', async (req, res) => {
   }
 });
 
-// Ruta  anuncios/blogs aprobados
+
+// Ruta para obtener anuncios/blogs aprobados
 router.get('/approved_ads_blogs', async (req, res) => {
   try {
-    // Buscar todos los anuncios/blogs con aprobado: true en la base de datos
-    const approvedAdsBlogs = await Anuncio.find({ aprobado: true });
+    const approvedAdsBlogs = await Anuncio.find({ aprobado: true })
+      .sort({ fechaCreacion: -1 }) // Orden descendente por fechaCreacion (más reciente primero)
+      .exec();
 
-    // Responder con la lista de anuncios/blogs aprobados
-    res.status(200).json({ status: 'success', data: approvedAdsBlogs });
+    const combinedDataArray = [];
+
+    for (const adsBlog of approvedAdsBlogs) {
+      const authorId = adsBlog.idAuthor;
+      const userDetails = await User.findById(authorId, 'name lastname imgProfile');
+
+      if (!userDetails) {
+        continue;
+      }
+
+      const enterpriseId = adsBlog.idEnterprise;
+      let razonSocial = '';
+
+      if (enterpriseId === '01') {
+        razonSocial = 'Ela Sustentable';
+      } else {
+        const empresa = await Empresa.findById(enterpriseId);
+
+        if (!empresa) {
+          continue;
+        }
+
+        razonSocial = empresa.razonSocial;
+      }
+
+      const combinedData = {
+        ...adsBlog.toObject(),
+        name: userDetails.name,
+        lastname: userDetails.lastname,
+        imgProfile: userDetails.imgProfile,
+        razonSocial: razonSocial
+      };
+
+      if (combinedData.contenido) {
+        delete combinedData.contenido;
+      }
+
+      combinedDataArray.push(combinedData);
+    }
+
+    res.status(200).json({ status: 'success', data: combinedDataArray });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ status: 'error', message: 'Error al obtener los anuncios/blogs aprobados' });
+    res.status(500).json({ status: 'error', message: 'Error al obtener los anuncios/blogs aprobados y sus detalles' });
   }
 });
 
-// rta anuncios/blogs no aprobados
+// Ruta para obtener anuncios/blogs no aprobados
 router.get('/unapproved_ads_blogs', async (req, res) => {
+  try {
+    const unapprovedAdsBlogs = await Anuncio.find({ aprobado: false })
+      .sort({ fechaCreacion: -1 }) // Orden descendente por fechaCreacion (más reciente primero)
+      .exec();
 
-  try{
-   // buscar los no aprobados 
-   const unapprovedAdsBlogs = await Anuncio.find({ aprobado: false });
-   // responder con la lista de anuncios/blogs no aprobados
-   res.status(200).json({ status: 'success', data: unapprovedAdsBlogs});
+    const combinedDataArray = [];
+
+    for (const adsBlog of unapprovedAdsBlogs) {
+      const authorId = adsBlog.idAuthor;
+      const userDetails = await User.findById(authorId, 'name lastname imgProfile');
+
+      if (!userDetails) {
+        continue;
+      }
+
+      const enterpriseId = adsBlog.idEnterprise;
+      let razonSocial = '';
+
+      if (enterpriseId === '01') {
+        razonSocial = 'Ela Sustentable';
+      } else {
+        const empresa = await Empresa.findById(enterpriseId);
+
+        if (!empresa) {
+          continue;
+        }
+
+        razonSocial = empresa.razonSocial;
+      }
+
+      const combinedData = {
+        ...adsBlog.toObject(),
+        name: userDetails.name,
+        lastname: userDetails.lastname,
+        imgProfile: userDetails.imgProfile,
+        razonSocial: razonSocial
+      };
+
+      if (combinedData.contenido) {
+        delete combinedData.contenido;
+      }
+
+      combinedDataArray.push(combinedData);
+    }
+
+    res.status(200).json({ status: 'success', data: combinedDataArray });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ status: 'error', message: 'Error al obtener los anuncios/blogs no aprobados' });
+    res.status(500).json({ status: 'error', message: 'Error al obtener los anuncios/blogs no aprobados y sus detalles' });
   }
-
 });
+
+
+
+
+
+
 
 module.exports = router;
 
