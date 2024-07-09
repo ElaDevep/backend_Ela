@@ -352,7 +352,19 @@ router.get('/unapproved_ads_blogs', async (req, res) => {
   }
 });
 
-
+router.delete('/ads_blogs/:adId', async (req, res) => { 
+  const adId = req.params.adId;
+  try { 
+    const deletedAd = await Anuncio.findByIdAndDelete(adId); 
+    if (!deletedAd) { 
+      return res.status(404).send({ error: "Anuncio no pudo ser encontrado" }); 
+    } 
+    res.send({ message: "El anuncio ha sido eliminado exitosamente" }); 
+  } catch (error) { 
+    console.error(error); 
+    res.status(500).send({ error: "Error al eliminar el anuncio" }); 
+  } 
+});
 
 
 

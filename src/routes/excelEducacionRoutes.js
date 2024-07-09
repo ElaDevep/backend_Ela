@@ -196,13 +196,13 @@ router.get('/historicoEd/:idEmpresa', async (req, res) => {
         const key = `${mes}-${nombreCliente}`;
         if (rowMap.has(key)) {
           const existingRow = rowMap.get(key);
-          existingRow.variacionPersonal = archivo.resultados.variacionPersonal;
+          existingRow.variacionPersonal = archivo.resultados.variacionPersonal.toFixed(1);
         } else {
           rowMap.set(key, {
             nNit: archivo.resultados.nNit,
             nombreCliente: archivo.resultados.nombreCliente,
             tipoNegocio: archivo.resultados.tipoNegocio,
-            lugar: archivo.resultados.lugar,
+            lugar: archivo.resultados.lugar,  
             mes: mes,
             sede: archivo.resultados.sede,
             variacionPersonal: archivo.resultados.variacionPersonal.toFixed(1)
